@@ -1,0 +1,35 @@
+network-id: production
+server-id: survival-1
+storage:
+  driver: postgres
+  jdbc-url-env: VARSTORE_JDBC_URL
+  username-env: VARSTORE_DB_USER
+  password-env: VARSTORE_DB_PASSWORD
+  tls-mode: verify-full
+  schema-mode: validate
+  durability-check: strict
+  maximum-pool-size: 4
+execution:
+  db-workers: 4
+  queue-max-requests: 256
+  queue-max-bytes: 8388608
+  request-timeout: 3s
+  connection-acquire-timeout: 1s
+  lock-timeout: 500ms
+  statement-timeout: 1500ms
+  shutdown-drain-timeout: 10s
+  max-attempts: 3
+limits:
+  max-value-bytes: 16384
+  max-batch-read-keys: 64
+  max-transaction-keys: 16
+  max-transaction-bytes: 65536
+operations:
+  full-result-retention: 7d
+  dedup-marker-retention: forever
+cache:
+  enabled: false
+# Plugin name -> additional explicitly allowed namespaces; own lowercase name is allowed.
+# shared-namespaces:
+#   MyPlugin: [shared]
+shared-namespaces: {}

@@ -1,0 +1,10 @@
+name: VarStorePreferences
+version: '${version}'
+main: kr.lunaf.varstore.examples.preferences.PreferencesPlugin
+api-version: '1.21.11'
+depend: [VarStore]
+author: LeeSeungmin
+commands:
+  preferences:
+    description: Persist network-wide chat visibility
+    usage: /preferences [on|off|toggle]

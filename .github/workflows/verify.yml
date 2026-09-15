@@ -1,0 +1,47 @@
+name: Verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: varstore
+          POSTGRES_PASSWORD: varstore-test
+          POSTGRES_DB: varstore
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U varstore"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      VARSTORE_TEST_JDBC_URL: jdbc:postgresql://localhost:5432/varstore
+      VARSTORE_TEST_DB_USER: varstore
+      VARSTORE_TEST_DB_PASSWORD: varstore-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: python3 scripts/check-public-tree.py
+      - run: ./gradlew build --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: varstore-distribution
+          path: |
+            varstore-paper/build/libs/*-SNAPSHOT.jar
+            varstore-api/build/libs/*.jar
+            varstore-tools/build/libs/*-SNAPSHOT.jar
+            varstore-testkit/build/libs/*.jar
+            examples/*/build/libs/*.jar

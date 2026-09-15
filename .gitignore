@@ -1,0 +1,15 @@
+**/build/
+.gradle/
+.idea/
+*.iml
+.env
+.env.*
+*.log
+.local/
+node_modules/
+__pycache__/
+*.pyc
+*.[mM][dD]
+*.[mM][aA][rR][kK][dD][oO][wW][nN]
+*.[mM][dD][oO][wW][nN]
+!/README.md

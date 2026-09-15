@@ -1,0 +1,108 @@
+{
+  "status": "PASS",
+  "totalTests": 39,
+  "suites": [
+    {
+      "suite": "kr.lunaf.varstore.paper.ConfirmationTokensTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.131,
+      "cases": [
+        "expiryRejectsConfirmationAtDeadline()",
+        "confirmationsBindActorAndPayloadAndAreConsumedOnce()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.paper.AdminPlanTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.178,
+      "cases": [
+        "deleteRetainsExactPreviewVersionAndActor()",
+        "invalidValueCannotReachConfirmation()",
+        "newValueProducesValidAuditedConditionalPlanFromLowercaseCommand()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.core.PostgresContractTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 18.893,
+      "cases": [
+        "callbacksReleaseConnectionAndUseSeparateExecutor()",
+        "completeReusableContracts()",
+        "byteAdmissionAndNamespaceAreCheckedBeforeStorage()",
+        "expiredOperationNeverReappliesAndOldEpochIsFenced()",
+        "shutdownDistinguishesQueuedFromUnconfirmedWrite()",
+        "adminVersionConflictAndAuditCommitTogether()",
+        "composedRequestsWorkWithSingleRequestAdmission()",
+        "primitiveValuesSurviveProviderRestartAndServerScopeIsSeparate()",
+        "invalidWritesReportOperationIdAndBoundsBeforeIo()",
+        "concurrentMigrationIsSerializedAndIdempotent()",
+        "boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.api.ApiContractTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.301,
+      "cases": [
+        "planRejectsTypeAmbiguityAndOversizedAggregate()",
+        "valuesEnforceBytesAndUnambiguousUnicode()",
+        "addressNamesAreCanonicalAndBounded()",
+        "failureRetainsAssignedOperationIdAndReplayRetainsVersion()",
+        "batchDistinguishesAbsentUnrequestedAndWrongType()",
+        "planIsImmutableAndBoundsAllTargetsIncludingConditions()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.postgres.PostgresSettingsTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.009,
+      "cases": [
+        "explicitSchemaAndCertificatePathsRemainAvailable()",
+        "dangerousUrlOptionsCannotOverrideCredentialsTlsOrDeadlines()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.postgres.PostgresContractTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 20.006,
+      "cases": [
+        "hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected()",
+        "separateNetworkEpochFencesOldSessions()",
+        "concurrentMigrationIsSerializedAndSchemaTamperingRejected()",
+        "primitivesSurvivePoolRestartAndDeletionPreservesType()",
+        "failedTransactionRollsBackPlaceholdersAndDurablyReplaysFailure()",
+        "twoIndependentServersPreserveTwoThousandIncrements()",
+        "overflowMissingAndMismatchedTypesNeverBecomeAbsence()",
+        "casNoChangeAndDeleteRecreateProtectVersions()",
+        "auditIsAtomicAndDeduplicated()",
+        "schemaDigestSurvivesConstraintDeparseAndReparse()",
+        "saturatedPoolHonorsShortAcquisitionDeadlineAndReturnsAbandonedLease()",
+        "realRowLockTimesOutWithoutMutationAndDiagnosticsObserveWait()",
+        "resultRetentionNeverDeletesDedupMarker()",
+        "expiredRequestDoesNotAcquireOrMutate()",
+        "batchHasSingleSnapshotDuringAtomicUpdates()"
+      ]
+    }
+  ],
+  "java": "21",
+  "postgresql": "18",
+  "recordedAt": "2026-09-15T12:16:39.322177+00:00"
+}

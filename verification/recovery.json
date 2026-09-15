@@ -1,0 +1,25 @@
+{
+  "scope": "dedicated loopback PostgreSQL18 container, logical snapshot recovery",
+  "checks": {
+    "T03": {
+      "passed": true,
+      "fault": "SIGKILL actual PostgreSQL process/container",
+      "recovery_seconds": 3.783,
+      "verified": "acknowledged pre-crash STRING persisted"
+    },
+    "T18": {
+      "passed": true,
+      "backup_bytes": 13669,
+      "recovery_seconds": 1.333,
+      "backup_age_at_restore_seconds": 0.029,
+      "verified": [
+        "value and original operation restored together",
+        "post-backup operation removed together",
+        "old open writer rejected STALE_EPOCH",
+        "fresh writer reads restored10 and commits40"
+      ]
+    }
+  },
+  "status": "PASS",
+  "recordedAt": "2026-09-15T12:10:30Z"
+}

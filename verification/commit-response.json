@@ -1,0 +1,13 @@
+{
+  "test": "T07",
+  "passed": true,
+  "fault": "actual COMMIT response bytes dropped",
+  "value": 1,
+  "proxy": {
+    "armed": false,
+    "triggered": 1,
+    "dropped_bytes": 23,
+    "triggered_at": 1789474222.7102797
+  },
+  "recordedAt": "2026-09-15T12:10:26Z"
+}

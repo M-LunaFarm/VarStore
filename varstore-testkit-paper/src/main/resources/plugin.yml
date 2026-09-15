@@ -1,0 +1,9 @@
+name: VarStoreBench
+version: '${version}'
+main: kr.lunaf.varstore.testkit.paper.VarStoreBench
+api-version: '1.21.11'
+depend: [VarStore]
+commands:
+  varstorebench:
+    description: Console-only real Paper API benchmark for disposable networks
+    usage: /varstorebench seed | start <seconds> <server-index> [baseline|large|transaction|hot]

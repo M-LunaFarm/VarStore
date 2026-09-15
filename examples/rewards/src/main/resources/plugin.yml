@@ -1,0 +1,10 @@
+name: VarStoreRewards
+version: '${version}'
+main: kr.lunaf.varstore.examples.rewards.RewardsPlugin
+api-version: '1.21.11'
+depend: [VarStore]
+author: LeeSeungmin
+commands:
+  dailyreward:
+    description: Claim one persistent reward point each UTC day
+    usage: /dailyreward [balance|YYYY-MM-DD]

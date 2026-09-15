@@ -1,0 +1,21 @@
+{
+  "network": "papersmoke-927fdf3a",
+  "paper": "1.21.11 build 132",
+  "bungee": "2093",
+  "java": "21",
+  "postgres": "18",
+  "scope": "loopback offline-auth integration only",
+  "checks": {},
+  "artifactSha256": {
+    "paper.jar": "5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba",
+    "bungee.jar": "4270d174c64516a27d5e8be3775ab19182f2ce2153635212af957d6feef7a604",
+    "varstore-paper": "12be121a280ce9972f3f527a6abd1068bc1737b547b454349dadb08024c1aff2",
+    "varstore-tools": "d25508a4f6a51efbf7aaf5aa5445413e48b273bfd4681374a78186f043b92f90",
+    "examples/preferences": "d2cbbf2b8ed9678c5283b822298aed2efc25c3e1e5eeeabb83c0f02009557302",
+    "examples/rewards": "ef12df994ab5d17f2d9331e388d25f6223c16b3a13afd524ef4f75b52e9f1110"
+  },
+  "mineflayer": "4.39.0",
+  "status": "FAIL",
+  "error": "a timed out waiting for Confirm within: ['[21:06:32 WARN]: *************************************************************************************\\n', '[21:06:32 WARN]: You are running the latest build for your Minecraft version (1.21.11)\\n', '[21:06:32 WARN]: However, you are 4 release(s) behind the latest stable release (26.2)!\\n', '[21:06:32 WARN]: It is recommended that you update as soon as possible\\n', '[21:06:32 WARN]: https://papermc.io/downloads/paper\\n', '[21:06:32 WARN]: *************************************************************************************\\n', '[21:06:32 INFO]: [VarStore] VarStore READY\\n', '[21:08:14 INFO]: Invalid modification or confirmation capacity reached; nothing was submitted.\\n']",
+  "recordedAt": "2026-09-15T12:08:47Z"
+}

@@ -1,0 +1,19 @@
+name: VarStore
+version: '${version}'
+main: kr.lunaf.varstore.paper.VarStorePlugin
+api-version: '1.21.11'
+author: LeeSeungmin
+description: Commit-confirmed PostgreSQL variable storage for Paper networks
+commands:
+  varstore:
+    description: VarStore status, inspection, operation lookup and conditional administration
+    usage: /varstore status|diagnostics|inspect|operation|set|delete|confirm
+permissions:
+  varstore.status:
+    default: false
+  varstore.inspect:
+    default: false
+  varstore.modify:
+    default: false
+  varstore.diagnostics:
+    default: false
