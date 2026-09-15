@@ -57,6 +57,9 @@
   ],
   "serverJarChecks": {
     "relocatedJdbcAndPool": true,
-    "versionMetadata": true
-  }
+    "versionMetadata": true,
+    "examplesExcludeApiClasses": true,
+    "apiSourcesAndJavadocPresent": true
+  },
+  "implementationCommit": "234e7f19ef710bfcc3c02630a307132e586bc15c"
 }

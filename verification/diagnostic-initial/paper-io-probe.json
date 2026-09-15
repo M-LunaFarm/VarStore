@@ -1,0 +1,65 @@
+{
+  "startedAt": null,
+  "endedAt": null,
+  "requestedDurationSeconds": 140,
+  "method": "JFR SocketRead/SocketWrite threshold 0ms; PostgreSQL stack frames; actual Paper JVM threads",
+  "scope": "Observed JDBC socket I/O during this interval; does not measure API submission latency or prove unobserved code paths",
+  "servers": {
+    "a": {
+      "pid": null,
+      "recordingStart": "2026-09-15 12:23:35 (UTC)",
+      "recordingDurationSeconds": 155,
+      "jdbcSocketEvents": 85909,
+      "threadCounts": {
+        "varstore-db-3": 21061,
+        "VarStore-borrow-a-1": 140,
+        "varstore-db-4": 20575,
+        "varstore-db-1": 20144,
+        "varstore-db-2": 21347,
+        "VarStore-a:connection-adder": 776,
+        "varstore-health-1": 1818,
+        "VarStore-borrow-a-2": 44,
+        "VarStore-a:housekeeper": 2,
+        "VarStore-a:connection-closer": 2
+      },
+      "mainThreadJdbcEvents": []
+    },
+    "b": {
+      "pid": null,
+      "recordingStart": "2026-09-15 12:23:32 (UTC)",
+      "recordingDurationSeconds": 144,
+      "jdbcSocketEvents": 82751,
+      "threadCounts": {
+        "VarStore-borrow-b-1": 62,
+        "varstore-health-1": 1710,
+        "varstore-db-3": 20133,
+        "VarStore-b:connection-adder": 736,
+        "varstore-db-1": 20703,
+        "varstore-db-4": 20233,
+        "varstore-db-2": 19086,
+        "VarStore-borrow-b-4": 88
+      },
+      "mainThreadJdbcEvents": []
+    },
+    "c": {
+      "pid": null,
+      "recordingStart": "2026-09-15 12:23:34 (UTC)",
+      "recordingDurationSeconds": 158,
+      "jdbcSocketEvents": 81535,
+      "threadCounts": {
+        "VarStore-borrow-c-1": 144,
+        "varstore-health-1": 1881,
+        "varstore-db-1": 19305,
+        "VarStore-c:connection-adder": 712,
+        "varstore-db-2": 19313,
+        "varstore-db-4": 20364,
+        "varstore-db-3": 19773,
+        "VarStore-borrow-c-4": 40,
+        "VarStore-c:housekeeper": 2,
+        "VarStore-c:connection-closer": 1
+      },
+      "mainThreadJdbcEvents": []
+    }
+  },
+  "status": "PASS"
+}

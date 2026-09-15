@@ -1,0 +1,65 @@
+{
+  "status": "aborted_before_hot_phase",
+  "instrumentation": "Zero-threshold socket/file JFR ran concurrently; rerun needed to isolate instrumentation effect.",
+  "phases": {
+    "baseline": {
+      "count": 6000,
+      "submission_p99_us": 3769.741,
+      "submission_read_p99_us": 3340.646,
+      "submission_write_p99_us": 4365.425,
+      "errors": {},
+      "read_latency_p95_ms": 120.862658,
+      "read_latency_p99_ms": 210.16057800000002,
+      "write_latency_p95_ms": 60.214297,
+      "write_latency_p99_ms": 170.002665
+    },
+    "large": {
+      "count": 2000,
+      "submission_p99_us": 1093.946,
+      "submission_read_p99_us": 810.501,
+      "submission_write_p99_us": 1523.922,
+      "errors": {},
+      "read_latency_p95_ms": 16.004651,
+      "read_latency_p99_ms": 32.349522,
+      "write_latency_p95_ms": 43.028157,
+      "write_latency_p99_ms": 61.445858
+    },
+    "transaction": {
+      "count": 2000,
+      "submission_p99_us": 10549.428,
+      "submission_read_p99_us": 3813.693,
+      "submission_write_p99_us": 19054.569,
+      "errors": {
+        "STORAGE_UNAVAILABLE": 324,
+        "REQUEST_TIMEOUT": 171,
+        "UNKNOWN_COMMIT_OUTCOME": 6
+      },
+      "read_latency_p95_ms": 2773.2452719999997,
+      "read_latency_p99_ms": 2852.897677,
+      "write_latency_p95_ms": 2998.994087,
+      "write_latency_p99_ms": 3000.849324
+    }
+  },
+  "originalRun": ".local/paper-smoke-20260915-212045",
+  "sourceDirectory": "verification/diagnostic-initial",
+  "sourceFiles": [
+    "verification/diagnostic-initial/bench-0-baseline-1789475077615.csv",
+    "verification/diagnostic-initial/bench-0-baseline-1789475077615.json",
+    "verification/diagnostic-initial/bench-0-large-1789475097791.csv",
+    "verification/diagnostic-initial/bench-0-large-1789475097791.json",
+    "verification/diagnostic-initial/bench-0-transaction-1789475120850.csv",
+    "verification/diagnostic-initial/bench-0-transaction-1789475120850.json",
+    "verification/diagnostic-initial/bench-1-baseline-1789475076253.csv",
+    "verification/diagnostic-initial/bench-1-baseline-1789475076253.json",
+    "verification/diagnostic-initial/bench-1-large-1789475097802.csv",
+    "verification/diagnostic-initial/bench-1-large-1789475097802.json",
+    "verification/diagnostic-initial/bench-1-transaction-1789475120864.csv",
+    "verification/diagnostic-initial/bench-1-transaction-1789475120864.json",
+    "verification/diagnostic-initial/bench-2-baseline-1789475076731.csv",
+    "verification/diagnostic-initial/bench-2-baseline-1789475076731.json",
+    "verification/diagnostic-initial/bench-2-large-1789475097807.csv",
+    "verification/diagnostic-initial/bench-2-large-1789475097807.json",
+    "verification/diagnostic-initial/bench-2-transaction-1789475120860.csv",
+    "verification/diagnostic-initial/bench-2-transaction-1789475120860.json"
+  ]
+}

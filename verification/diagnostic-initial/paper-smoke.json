@@ -1,0 +1,259 @@
+{
+  "network": "papersmoke-672c1472",
+  "paper": "1.21.11 build 132",
+  "bungee": "2093",
+  "java": "21",
+  "postgres": "18",
+  "scope": "loopback offline-auth integration only",
+  "checks": {
+    "T21": "PASS: real console preview on A, commit on B, stale confirmation condition fails and token cannot be reused",
+    "T02": "PASS: SIGKILL after acknowledged writes; independent B reads all 4 types",
+    "T01": "PASS: all 4 types and values after process restart",
+    "T13": "PASS: 3 Paper servers; confirmed writes and cross-server reads with 0 connected players",
+    "permissions": "PASS: unprivileged bot denied all 4 administrator permission families",
+    "T14": "PASS: DB row lock delayed acknowledged preference save by 0.352s; actual Bungee transfer A -> B loaded committed false",
+    "consumers": "PASS: persistent chat visibility + UTC daily reward; cross-server replay retained exactly 1 DB point"
+  },
+  "artifactSha256": {
+    "paper.jar": "5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba",
+    "bungee.jar": "4270d174c64516a27d5e8be3775ab19182f2ce2153635212af957d6feef7a604",
+    "varstore-paper": "9c0971d4b27ebd69bab345c778ef1ae2b85251aed35364e966a083a355c2d596",
+    "varstore-tools": "20830bc10597fe2c86ec6d661390c2109e14c2581fbeb7d1e034218b33f32817",
+    "examples/preferences": "8ac0800a644615d5b8cdb93cc555378031af7b40e856cc4f857866945284d22f",
+    "examples/rewards": "24b38bc90f30e484ea7057950ed60e1ba7484d148a1122fc81a0e123fa6cacca"
+  },
+  "mineflayer": "4.39.0",
+  "status": "FAIL",
+  "concurrentGameActions": [
+    {
+      "at": 1789474998.0856183,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789474998.186399,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475003.3391097,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475003.4898922,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475008.9308176,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475009.0919874,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475014.298007,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475014.3986936,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475019.5555327,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475019.6059384,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475024.6610372,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475024.812014,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475029.968077,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475030.0217192,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475035.125879,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475035.2767055,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475040.4322443,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475040.5340922,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475045.6388679,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475045.7395482,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475050.7952387,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475050.845636,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475055.9499252,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475056.0504847,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475061.1047473,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475061.1553037,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475066.2686896,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475066.370486,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475071.4738128,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475071.525033,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475076.6299996,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475076.7306404,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475081.8366325,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475081.937619,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475087.0415068,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475087.1421742,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475092.194606,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475092.2450747,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475097.3006268,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475097.351045,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475107.8876946,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789475110.6183105,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789475120.6104035,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789475120.6607707,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    }
+  ],
+  "paperBenchmarkReports": [
+    "verification/paper-benchmark/a-baseline.json",
+    "verification/paper-benchmark/b-baseline.json",
+    "verification/paper-benchmark/c-baseline.json",
+    "verification/paper-benchmark/a-large.json",
+    "verification/paper-benchmark/b-large.json",
+    "verification/paper-benchmark/c-large.json"
+  ],
+  "error": "Paper benchmark: {'phase': 'transaction', 'serverIndex': 0, 'network': 'papersmoke-672c1472', 'paperVersion': '1.21.11-132-c5eb079 (MC: 1.21.11)', 'javaVersion': '21.0.12', 'startedAt': '2026-09-15T12:24:57.889020813Z', 'finishedAt': '2026-09-15T12:25:20.842202012Z', 'provenance': 'API calls submitted by a repeating Bukkit main-thread task on a real Paper server', 'requestedSeconds': 20, 'elapsedMillis': 22953, 'scheduledTicks': 400, 'requests': 667, 'allSubmissionsOnMainThread': True, 'outstanding': 0, 'submissionP50Micros': 174.914, 'submissionP95Micros': 2464.475, 'submissionP99Micros': 9625.997, 'tickIntervalP95Millis': 53.934557, 'tickIntervalP99Millis': 65.754987, 'reads': {'successP95Millis': 2783.475858, 'errors': {}, 'count': 467, 'successP99Millis': 2836.957015, 'successP50Millis': 2677.788474}, 'writes': {'successP95Millis': 3000.079417, 'errors': {'REQUEST_TIMEOUT': 46, 'STORAGE_UNAVAILABLE': 116, 'UNKNOWN_COMMIT_OUTCOME': 3}, 'count': 200, 'successP99Millis': 3000.849324, 'successP50Millis': 2795.428305}, 'transactionKeys': 16, 'transactionEstimatedBytes': 65526}",
+  "recordedAt": "2026-09-15T12:26:13Z"
+}

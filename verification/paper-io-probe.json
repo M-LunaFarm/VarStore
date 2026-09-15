@@ -1,0 +1,48 @@
+{
+  "startedAt": 1789476310.7968023,
+  "endedAt": 1789476325.6461535,
+  "requestedDurationSeconds": 10,
+  "method": "JFR SocketRead/SocketWrite threshold 0ms; PostgreSQL stack frames; actual Paper JVM threads",
+  "scope": "Observed JDBC socket I/O during this interval; does not measure API submission latency or prove unobserved code paths",
+  "servers": {
+    "b": {
+      "pid": 612438,
+      "recordingStart": "2026-09-15 12:45:11 (UTC)",
+      "recordingDurationSeconds": 14,
+      "jdbcSocketEvents": 193,
+      "threadCounts": {
+        "VarStore-borrow-b-1": 28,
+        "varstore-health-1": 163,
+        "VarStore-b:housekeeper": 2
+      },
+      "mainThreadJdbcEvents": []
+    },
+    "c": {
+      "pid": 613646,
+      "recordingStart": "2026-09-15 12:45:13 (UTC)",
+      "recordingDurationSeconds": 13,
+      "jdbcSocketEvents": 161,
+      "threadCounts": {
+        "VarStore-borrow-c-5": 24,
+        "varstore-health-1": 137
+      },
+      "mainThreadJdbcEvents": []
+    },
+    "a": {
+      "pid": 616686,
+      "recordingStart": "2026-09-15 12:45:15 (UTC)",
+      "recordingDurationSeconds": 11,
+      "jdbcSocketEvents": 319,
+      "threadCounts": {
+        "varstore-db-2": 56,
+        "varstore-db-3": 46,
+        "varstore-db-1": 26,
+        "varstore-health-1": 127,
+        "VarStore-borrow-a-3": 20,
+        "varstore-db-4": 44
+      },
+      "mainThreadJdbcEvents": []
+    }
+  },
+  "status": "PASS"
+}

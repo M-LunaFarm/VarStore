@@ -134,7 +134,7 @@ try:
     servers['a'].command('varstore confirm ' + token, 'outcome=APPLIED')
     line = servers['b'].command(f'varstore inspect {NETWORK} smoke NETWORK _ SYSTEM {unicode_owner} title STRING', 'value/version=')
     assert 'value=unicode-owner-value' in line, line
-    report['checks']['unicode-owner'] = 'PASS: normalized UTF-8 SYSTEM owner saved on A and read on B'
+    report['checks']['unicode-owner'] = 'PASS: well-formed UTF-8 SYSTEM owner, spelling preserved; saved on A and read on B'
     report['checks']['T13'] = 'PASS: 3 Paper servers; confirmed writes and cross-server reads with 0 connected players'
     proxy = RUN / 'proxy'; (proxy / 'modules').mkdir(parents=True)
     shutil.copy2(ROOT / '.local/bungee.jar', proxy / 'bungee.jar')

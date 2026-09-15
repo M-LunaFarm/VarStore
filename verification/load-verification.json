@@ -1,0 +1,103 @@
+{
+  "verifiedAt": "2026-09-15T12:53:34.064768+00:00",
+  "sourceReport": "verification/load-report.json",
+  "sourceRequests": "verification/load-requests.csv",
+  "verifiedRequestCount": 12000,
+  "checks": {
+    "baseline": {
+      "read": {
+        "requests": 4200,
+        "errors": {}
+      },
+      "write": {
+        "requests": 1800,
+        "errors": {}
+      }
+    },
+    "large_16k": {
+      "read": {
+        "requests": 1400,
+        "errors": {}
+      },
+      "write": {
+        "requests": 600,
+        "errors": {}
+      }
+    },
+    "maximum_transaction": {
+      "read": {
+        "requests": 1400,
+        "errors": {}
+      },
+      "write": {
+        "requests": 600,
+        "errors": {
+          "STORAGE_UNAVAILABLE": 323,
+          "REQUEST_TIMEOUT": 195,
+          "UNKNOWN_COMMIT_OUTCOME": 7
+        }
+      }
+    },
+    "hot_key": {
+      "read": {
+        "requests": 1400,
+        "errors": {
+          "STORAGE_UNAVAILABLE": 17
+        }
+      },
+      "write": {
+        "requests": 600,
+        "errors": {
+          "STORAGE_UNAVAILABLE": 7
+        }
+      }
+    }
+  },
+  "hotCounter": {
+    "successfulWriteRequests": 593,
+    "storedCounter": 593
+  },
+  "afterWork": {
+    "point": "after_work",
+    "at": "2026-09-15T12:49:39.264847464Z",
+    "heapUsedBytes": 37520720,
+    "heapCommittedBytes": 136314880,
+    "threadCount": 37,
+    "varstoreThreads": 25,
+    "outstanding": 0,
+    "activeConnections": 0,
+    "queuedRequests": 0,
+    "queuedBytes": 0,
+    "pendingDeliveries": 0,
+    "retainedRequestBytes": 0
+  },
+  "afterClose": {
+    "point": "after_close",
+    "at": "2026-09-15T12:49:39.782639505Z",
+    "heapUsedBytes": 37520720,
+    "heapCommittedBytes": 136314880,
+    "threadCount": 12,
+    "varstoreThreads": 0,
+    "outstanding": 0,
+    "activeConnections": 0,
+    "queuedRequests": 0,
+    "queuedBytes": 0,
+    "pendingDeliveries": 0,
+    "retainedRequestBytes": 0
+  },
+  "actualApiClientConnectionsAfterClose": 0,
+  "aggregateOperationComparison": {
+    "successfulWriteReceipts": 3068,
+    "committedOperationRowDelta": 3075,
+    "difference": 7,
+    "unknownCommitOutcomeRequests": 7,
+    "limitation": "The CSV does not retain operation IDs, so this aggregate comparison is not per-operation reconciliation of the seven unknown outcomes."
+  },
+  "interpretation": [
+    "Baseline and 16-KiB phases completed without errors.",
+    "The maximum transaction phase shares the same 16 targets across all three clients and exceeded measured capacity; all 525 write failures are retained.",
+    "The hot phase starts immediately after transaction saturation and includes 24 STORAGE_UNAVAILABLE results during recovery; its 593 successful increments equal the stored counter.",
+    "All sampled request-retention gauges drained and all owned JDBC connections and platform threads closed. The roughly two-minute run does not establish absence of long-term leaks.",
+    "Platform thread counts exclude virtual delivery threads; pendingDeliveries and retainedRequestBytes track their bounded retained work."
+  ]
+}

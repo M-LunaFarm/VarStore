@@ -1,0 +1,189 @@
+{
+  "generatedAt": "2026-09-15T12:54:44.068342+00:00",
+  "provenance": "Independent union of raw CSV samples from three real Paper main-thread benchmark plugins",
+  "quantileMethod": "nearest rank on union of per-request samples; per-server percentiles are not averaged",
+  "baselineKeys": 100000,
+  "phases": {
+    "baseline": {
+      "sourceFiles": [
+        "verification/paper-benchmark/a-baseline.csv",
+        "verification/paper-benchmark/a-baseline.json",
+        "verification/paper-benchmark/b-baseline.csv",
+        "verification/paper-benchmark/b-baseline.json",
+        "verification/paper-benchmark/c-baseline.csv",
+        "verification/paper-benchmark/c-baseline.json"
+      ],
+      "requests": 6000,
+      "errors": {},
+      "allMainThread": true,
+      "allGlobalSlotsPresentExactlyOnce": true,
+      "submissionP50Micros": 94.716,
+      "submissionP95Micros": 366.498,
+      "submissionP99Micros": 951.853,
+      "observedSpanSeconds": 60.02599,
+      "observedRequestsPerSecond": 99.95670208854531,
+      "observedSpanDefinition": "earliest first submission through latest completion report, including request drain",
+      "startSkewMillis": 23.480999999999998,
+      "read": {
+        "count": 4200,
+        "successP50Millis": 7.93224,
+        "successP95Millis": 20.545099999999998,
+        "successP99Millis": 38.137921999999996
+      },
+      "write": {
+        "count": 1800,
+        "successP50Millis": 15.427121999999999,
+        "successP95Millis": 36.376889999999996,
+        "successP99Millis": 69.96579700000001
+      },
+      "transactionTargetSharing": [
+        "each server has a distinct group of 16 transaction keys; hot phase shares one global LONG key"
+      ],
+      "referenceThresholdsMet": {
+        "readP95": true,
+        "readP99": true,
+        "writeP95": true,
+        "writeP99": true,
+        "submissionP99": true,
+        "zeroErrors": true
+      }
+    },
+    "large": {
+      "sourceFiles": [
+        "verification/paper-benchmark/a-large.csv",
+        "verification/paper-benchmark/a-large.json",
+        "verification/paper-benchmark/b-large.csv",
+        "verification/paper-benchmark/b-large.json",
+        "verification/paper-benchmark/c-large.csv",
+        "verification/paper-benchmark/c-large.json"
+      ],
+      "requests": 2000,
+      "errors": {},
+      "allMainThread": true,
+      "allGlobalSlotsPresentExactlyOnce": true,
+      "submissionP50Micros": 96.649,
+      "submissionP95Micros": 603.747,
+      "submissionP99Micros": 1753.567,
+      "observedSpanSeconds": 20.023779,
+      "observedRequestsPerSecond": 99.88124619233962,
+      "observedSpanDefinition": "earliest first submission through latest completion report, including request drain",
+      "startSkewMillis": 23.077,
+      "read": {
+        "count": 1400,
+        "successP50Millis": 9.197012,
+        "successP95Millis": 32.354239,
+        "successP99Millis": 69.600982
+      },
+      "write": {
+        "count": 600,
+        "successP50Millis": 25.122477,
+        "successP95Millis": 89.515232,
+        "successP99Millis": 207.24201300000001
+      },
+      "transactionTargetSharing": [
+        "each server has a distinct group of 16 transaction keys; hot phase shares one global LONG key"
+      ],
+      "referenceThresholdsMet": {
+        "readP95": false,
+        "readP99": true,
+        "writeP95": false,
+        "writeP99": false,
+        "submissionP99": false,
+        "zeroErrors": true
+      }
+    },
+    "transaction": {
+      "sourceFiles": [
+        "verification/paper-benchmark/a-transaction.csv",
+        "verification/paper-benchmark/a-transaction.json",
+        "verification/paper-benchmark/b-transaction.csv",
+        "verification/paper-benchmark/b-transaction.json",
+        "verification/paper-benchmark/c-transaction.csv",
+        "verification/paper-benchmark/c-transaction.json"
+      ],
+      "requests": 2000,
+      "errors": {},
+      "allMainThread": true,
+      "allGlobalSlotsPresentExactlyOnce": true,
+      "submissionP50Micros": 291.67,
+      "submissionP95Micros": 1847.652,
+      "submissionP99Micros": 3831.837,
+      "observedSpanSeconds": 21.682874,
+      "observedRequestsPerSecond": 92.23869492577413,
+      "observedSpanDefinition": "earliest first submission through latest completion report, including request drain",
+      "startSkewMillis": 34.145,
+      "read": {
+        "count": 1400,
+        "successP50Millis": 783.1063340000001,
+        "successP95Millis": 1576.680223,
+        "successP99Millis": 1668.772628
+      },
+      "write": {
+        "count": 600,
+        "successP50Millis": 1138.283692,
+        "successP95Millis": 1917.711392,
+        "successP99Millis": 2023.520059
+      },
+      "transactionTargetSharing": [
+        "each server has a distinct group of 16 transaction keys; hot phase shares one global LONG key"
+      ],
+      "referenceThresholdsMet": {
+        "readP95": false,
+        "readP99": false,
+        "writeP95": false,
+        "writeP99": false,
+        "submissionP99": false,
+        "zeroErrors": true
+      }
+    },
+    "hot": {
+      "sourceFiles": [
+        "verification/paper-benchmark/a-hot.csv",
+        "verification/paper-benchmark/a-hot.json",
+        "verification/paper-benchmark/b-hot.csv",
+        "verification/paper-benchmark/b-hot.json",
+        "verification/paper-benchmark/c-hot.csv",
+        "verification/paper-benchmark/c-hot.json"
+      ],
+      "requests": 2000,
+      "errors": {},
+      "allMainThread": true,
+      "allGlobalSlotsPresentExactlyOnce": true,
+      "submissionP50Micros": 73.115,
+      "submissionP95Micros": 234.995,
+      "submissionP99Micros": 622.182,
+      "observedSpanSeconds": 20.028289,
+      "observedRequestsPerSecond": 99.85875478429534,
+      "observedSpanDefinition": "earliest first submission through latest completion report, including request drain",
+      "startSkewMillis": 23.033,
+      "read": {
+        "count": 1400,
+        "successP50Millis": 7.269564,
+        "successP95Millis": 22.469094000000002,
+        "successP99Millis": 49.336311
+      },
+      "write": {
+        "count": 600,
+        "successP50Millis": 15.424958,
+        "successP95Millis": 41.113932999999996,
+        "successP99Millis": 143.859938
+      },
+      "transactionTargetSharing": [
+        "each server has a distinct group of 16 transaction keys; hot phase shares one global LONG key"
+      ],
+      "referenceThresholdsMet": {
+        "readP95": true,
+        "readP99": true,
+        "writeP95": true,
+        "writeP99": true,
+        "submissionP99": true,
+        "zeroErrors": true
+      }
+    }
+  },
+  "limitations": [
+    "Nominal 100 requests/s comes from 5 slots per 20-Hz server tick; observed throughput reports actual wall time and server start skew.",
+    "Thresholds are measurements on the observed shared test host, not a universal performance guarantee.",
+    "These short runs do not establish absence of all long-term resource leaks."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-09-15T12:49:28.491567+00:00",
+  "database": "varstore_verify",
+  "measurement": "Committed PostgreSQL operation outcomes within each measured Paper phase window",
+  "phases": {
+    "baseline": {
+      "network": "papersmoke-0b5d0ff1",
+      "namespace": "varstorebench",
+      "startedAtInclusive": "2026-09-15T12:43:06.703191188Z",
+      "finishedAtInclusive": "2026-09-15T12:44:06.729181004Z",
+      "readOnlySql": "SELECT outcome,count(*) FROM vs_operations WHERE network_id='papersmoke-0b5d0ff1' AND namespace='varstorebench' AND completed_at>='2026-09-15T12:43:06.703191188Z'::timestamptz AND completed_at<='2026-09-15T12:44:06.729181004Z'::timestamptz GROUP BY outcome ORDER BY outcome",
+      "apiWriteRequests": 1800,
+      "committedOutcomes": {
+        "APPLIED": 1200,
+        "NO_CHANGE": 600
+      },
+      "verification": "Sum of stored operation outcomes equals independent sum of three Paper write-request reports."
+    },
+    "large": {
+      "network": "papersmoke-0b5d0ff1",
+      "namespace": "varstorebench",
+      "startedAtInclusive": "2026-09-15T12:44:07.053208183Z",
+      "finishedAtInclusive": "2026-09-15T12:44:27.076987168Z",
+      "readOnlySql": "SELECT outcome,count(*) FROM vs_operations WHERE network_id='papersmoke-0b5d0ff1' AND namespace='varstorebench' AND completed_at>='2026-09-15T12:44:07.053208183Z'::timestamptz AND completed_at<='2026-09-15T12:44:27.076987168Z'::timestamptz GROUP BY outcome ORDER BY outcome",
+      "apiWriteRequests": 600,
+      "committedOutcomes": {
+        "APPLIED": 600
+      },
+      "verification": "Sum of stored operation outcomes equals independent sum of three Paper write-request reports."
+    },
+    "transaction": {
+      "network": "papersmoke-0b5d0ff1",
+      "namespace": "varstorebench",
+      "startedAtInclusive": "2026-09-15T12:44:27.319115240Z",
+      "finishedAtInclusive": "2026-09-15T12:44:49.001989191Z",
+      "readOnlySql": "SELECT outcome,count(*) FROM vs_operations WHERE network_id='papersmoke-0b5d0ff1' AND namespace='varstorebench' AND completed_at>='2026-09-15T12:44:27.319115240Z'::timestamptz AND completed_at<='2026-09-15T12:44:49.001989191Z'::timestamptz GROUP BY outcome ORDER BY outcome",
+      "apiWriteRequests": 600,
+      "committedOutcomes": {
+        "APPLIED": 600
+      },
+      "verification": "Sum of stored operation outcomes equals independent sum of three Paper write-request reports."
+    },
+    "hot": {
+      "network": "papersmoke-0b5d0ff1",
+      "namespace": "varstorebench",
+      "startedAtInclusive": "2026-09-15T12:44:49.253152966Z",
+      "finishedAtInclusive": "2026-09-15T12:45:09.281441826Z",
+      "readOnlySql": "SELECT outcome,count(*) FROM vs_operations WHERE network_id='papersmoke-0b5d0ff1' AND namespace='varstorebench' AND completed_at>='2026-09-15T12:44:49.253152966Z'::timestamptz AND completed_at<='2026-09-15T12:45:09.281441826Z'::timestamptz GROUP BY outcome ORDER BY outcome",
+      "apiWriteRequests": 600,
+      "committedOutcomes": {
+        "APPLIED": 600
+      },
+      "verification": "Sum of stored operation outcomes equals independent sum of three Paper write-request reports."
+    }
+  },
+  "baselineExplanation": "The measured baseline includes1800 committed API write requests:1200 APPLIED and600 NO_CHANGE. The20-second warmup repeats the deterministic key/payload sequence used by the first20 seconds of the measured baseline. NO_CHANGE still commits an operation receipt but does not mutate the variable row.",
+  "standaloneComparison": {
+    "network": "load-f46f6cfb-e8f1-4c56-b0fd-aa0736ef3e95",
+    "namespace": "benchmark",
+    "database": "varstore_verify",
+    "startedAtInclusive": "2026-09-15T12:47:36.143835962Z",
+    "finishedAtInclusive": "2026-09-15T12:48:36.217798208Z",
+    "readOnlySql": "SELECT outcome,count(*) FROM vs_operations WHERE network_id='load-f46f6cfb-e8f1-4c56-b0fd-aa0736ef3e95' AND namespace='benchmark' AND completed_at>='2026-09-15T12:47:36.143835962Z'::timestamptz AND completed_at<='2026-09-15T12:48:36.217798208Z'::timestamptz GROUP BY outcome ORDER BY outcome",
+    "apiWriteRequests": 1800,
+    "committedOutcomes": {
+      "APPLIED": 1800
+    },
+    "explanation": "A fresh network and payload sequence produced 1,800 APPLIED outcomes for all 1,800 baseline API writes; this standalone baseline has no warmup reuse."
+  }
+}

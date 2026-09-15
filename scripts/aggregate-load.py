@@ -6,7 +6,7 @@ percentiles use nearest rank over all individual samples, never mean percentiles
 Capacity errors remain visible; thresholds describe observations, not guarantees.
 """
 from pathlib import Path
-import argparse, csv, datetime, json, math, collections
+import argparse, csv, datetime, json, math, collections, re
 root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--input',type=Path,default=root/'verification/paper-benchmark')
@@ -16,6 +16,10 @@ directory=args.input.resolve()
 def source_name(path):
     try:return str(path.relative_to(root))
     except ValueError:return str(path)
+def instant(value):
+    # Java Instant has nanoseconds; Python3.10 accepts at most microseconds.
+    text=re.sub(r"(\.\d{6})\d+(?=[+-]|$)",r"\1",value.replace("Z","+00:00"))
+    return datetime.datetime.fromisoformat(text)
 def percentile(values,p):
     values=sorted(values)
     return values[max(0, math.ceil(len(values)*p)-1)] if values else None
@@ -40,14 +44,15 @@ for phase in ('baseline','large','transaction','hot'):
     assert all(report['allSubmissionsOnMainThread'] and report['outstanding']==0 for report in reports)
     errors=collections.Counter(row['error'] for row in rows if row['error'])
     summary={'sourceFiles':source_paths,'requests':len(rows),'errors':dict(errors),'allMainThread':True,'allGlobalSlotsPresentExactlyOnce':True,'submissionP50Micros':percentile([float(row['submission_us']) for row in rows],.50),'submissionP95Micros':percentile([float(row['submission_us']) for row in rows],.95),'submissionP99Micros':percentile([float(row['submission_us']) for row in rows],.99)}
-    starts=[datetime.datetime.fromisoformat(r['startedAt'].replace('Z','+00:00')) for r in reports]
-    finishes=[datetime.datetime.fromisoformat(r['finishedAt'].replace('Z','+00:00')) for r in reports]
+    starts=[instant(r['startedAt']) for r in reports]
+    finishes=[instant(r['finishedAt']) for r in reports]
     span=(max(finishes)-min(starts)).total_seconds()
     summary['observedSpanSeconds']=span;summary['observedRequestsPerSecond']=len(rows)/span
+    summary['observedSpanDefinition']='earliest first submission through latest completion report, including request drain'
     summary['startSkewMillis']=(max(starts)-min(starts)).total_seconds()*1000
-    for operation,expected_share in [('read',.7),('write',.3)]:
+    for operation,expected_tenths in [('read',7),('write',3)]:
         matching=[row for row in rows if row['operation']==operation]
-        assert len(matching)==int(len(rows)*expected_share)
+        assert len(matching)==len(rows)*expected_tenths//10
         latencies=[float(row['latency_us'])/1000 for row in matching if not row['error']]
         summary[operation]={'count':len(matching),'successP50Millis':percentile(latencies,.5),'successP95Millis':percentile(latencies,.95),'successP99Millis':percentile(latencies,.99)}
     summary['transactionTargetSharing']=sorted({r.get('transactionTargetSharing','unspecified in source report') for r in reports})

@@ -1,0 +1,600 @@
+{
+  "startedAt": "2026-09-15T12:47:23.884335+00:00",
+  "before": {
+    "at": "2026-09-15T12:47:23.884747+00:00",
+    "logicalCpuCount": 6,
+    "cpuModel": "AMD EPYC Processor (with IBPB)",
+    "memory": {
+      "MemTotalBytes": 12537618432,
+      "MemAvailableBytes": 2391928832,
+      "SwapTotalBytes": 4294963200
+    },
+    "platform": "Linux-5.15.0-185-generic-x86_64-with-glibc2.35",
+    "loadAverage": [
+      1.59619140625,
+      2.93359375,
+      3.20849609375
+    ],
+    "referenceHostMatched": false,
+    "referenceHostNote": "No assertion that this shared host matches the proposed 4-vCPU/8-GiB PostgreSQL reference profile."
+  },
+  "requestedTiming": {
+    "baselineSeconds": 60,
+    "variantSeconds": 20,
+    "requestsPerSecond": 100
+  },
+  "paperEvidencePath": "verification/paper-smoke.json",
+  "submissionProvenance": "three standalone core clients; not Paper main-thread submissions",
+  "exitCode": 0,
+  "after": {
+    "at": "2026-09-15T12:49:39.937844+00:00",
+    "logicalCpuCount": 6,
+    "cpuModel": "AMD EPYC Processor (with IBPB)",
+    "memory": {
+      "MemTotalBytes": 12537618432,
+      "MemAvailableBytes": 2607955968,
+      "SwapTotalBytes": 4294963200
+    },
+    "platform": "Linux-5.15.0-185-generic-x86_64-with-glibc2.35",
+    "loadAverage": [
+      3.50537109375,
+      3.3193359375,
+      3.3154296875
+    ],
+    "referenceHostMatched": false,
+    "referenceHostNote": "No assertion that this shared host matches the proposed 4-vCPU/8-GiB PostgreSQL reference profile."
+  },
+  "finishedAt": "2026-09-15T12:49:39.938136+00:00",
+  "paperEvidenceObserved": true,
+  "paperConcurrentGameActions": [
+    {
+      "at": 1789476445.267166,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476445.3719003,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476450.4782915,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476450.5796807,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476455.6328716,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476455.683434,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476460.7908554,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476460.8413029,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476465.8953598,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476465.9458113,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476471.0503876,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476471.1008208,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476476.2553093,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476476.3061812,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476481.4149196,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476481.4655566,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476486.6186962,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476486.7192962,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476491.8255181,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476491.92616,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476497.0308278,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476497.0817702,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476502.1871862,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476502.2429826,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476507.3492956,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476507.3997068,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476512.4549022,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476512.505442,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476517.609101,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476517.6594713,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476522.7671688,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476522.8683147,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476527.973132,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476528.074631,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476533.130309,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476533.1808426,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476538.2889066,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476538.3394742,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476543.4996252,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476543.6011229,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476548.706759,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476548.757177,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476553.8690188,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476553.9703314,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476559.0736592,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476559.1747966,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476564.2806313,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476564.3813758,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476569.4353473,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    },
+    {
+      "at": 1789476569.485705,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476574.5955865,
+      "command": "/preferences toggle",
+      "response": "Preference committed: false"
+    },
+    {
+      "at": 1789476574.6467483,
+      "command": "/dailyreward balance",
+      "response": "Reward points: 1"
+    },
+    {
+      "at": 1789476579.7534494,
+      "command": "/preferences toggle",
+      "response": "Preference committed: true"
+    }
+  ],
+  "paperEvidenceStatusAtRead": "FAIL",
+  "paperEvidenceNetworkAtRead": "papersmoke-672c1472",
+  "paperEvidenceRecordedAtRead": "2026-09-15T12:26:13Z",
+  "paperEvidenceNote": "Historical AtRead fields retain the stale previous report observed before the live runner finalized. paperEvidenceFinal and paperConcurrentGameActions use the completed PASS report and exact standalone timestamp overlap.",
+  "paperEvidenceFinal": {
+    "status": "PASS",
+    "network": "papersmoke-0b5d0ff1",
+    "recordedAt": "2026-09-15T12:51:45Z",
+    "correlatedAt": "2026-09-15T12:53:59.988114+00:00",
+    "loadStartedAtInclusive": "2026-09-15T12:47:24.043894037Z",
+    "loadFinishedAtInclusive": "2026-09-15T12:49:39.783169075Z",
+    "overlappingActions": 53,
+    "overlappingCommandCounts": {
+      "/preferences toggle": 27,
+      "/dailyreward balance": 26
+    },
+    "actions": [
+      {
+        "at": 1789476445.267166,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476445.3719003,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476450.4782915,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476450.5796807,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476455.6328716,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476455.683434,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476460.7908554,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476460.8413029,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476465.8953598,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476465.9458113,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476471.0503876,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476471.1008208,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476476.2553093,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476476.3061812,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476481.4149196,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476481.4655566,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476486.6186962,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476486.7192962,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476491.8255181,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476491.92616,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476497.0308278,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476497.0817702,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476502.1871862,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476502.2429826,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476507.3492956,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476507.3997068,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476512.4549022,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476512.505442,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476517.609101,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476517.6594713,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476522.7671688,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476522.8683147,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476527.973132,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476528.074631,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476533.130309,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476533.1808426,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476538.2889066,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476538.3394742,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476543.4996252,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476543.6011229,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476548.706759,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476548.757177,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476553.8690188,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476553.9703314,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476559.0736592,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476559.1747966,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476564.2806313,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476564.3813758,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476569.4353473,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      },
+      {
+        "at": 1789476569.485705,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476574.5955865,
+        "command": "/preferences toggle",
+        "response": "Preference committed: false"
+      },
+      {
+        "at": 1789476574.6467483,
+        "command": "/dailyreward balance",
+        "response": "Reward points: 1"
+      },
+      {
+        "at": 1789476579.7534494,
+        "command": "/preferences toggle",
+        "response": "Preference committed: true"
+      }
+    ]
+  }
+}

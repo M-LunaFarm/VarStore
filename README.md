@@ -2,7 +2,7 @@
 
 Paper 서버들이 공용 PostgreSQL Primary에 영속 변수를 저장하는 Java 21 플러그인입니다. 모든 저장 API는 비동기이며 쓰기 성공은 DB 커밋 응답을 확인한 뒤 전달합니다. BungeeCord는 접속·이동만 담당하고 저장 요청을 중계하지 않습니다. 접속자가 없어도 저장할 수 있습니다.
 
-**현재 버전: 1.0.0 — 정식 출시 검증 진행 중.** 아래 검증 기록에 없는 환경은 지원을 확인하지 않았습니다. 실측 결과를 성능 보장으로 해석하지 마세요.
+**현재 버전: 1.0.0.** 아래 검증 기록에 없는 환경은 지원을 확인하지 않았습니다. 실측 결과를 성능 보장으로 해석하지 마세요.
 
 ## 구성과 빌드
 
@@ -234,7 +234,44 @@ pg_restore --exit-on-error --dbname=varstore_restored varstore.dump
 
 Folia, Velocity, 다른 Minecraft 버전과 DB 제품은 이 조합의 지원 범위에 포함하지 않습니다.
 
-정식 1.0 표시는 T01–T22 계약·실제 장애 시험, 두 종류의 소비 플러그인 실사용, 지원 조합, 복구 연습, 권한, 문서·예제·배포 산출물을 확인한 뒤 합니다. 검증 목표 부하는 3대 Paper, 10만 키, 총100요청/초(읽기70%·쓰기30%)입니다. 목표 get p95/p99 25/100ms, write 50/150ms, 접수 p99 1ms는 측정 목표입니다. 본 README에 숫자만 있다는 것으로 통과를 주장하지 않습니다.
+검증 결과:
+
+| 검증 | 결과 및 근거 |
+| --- | --- |
+| 자동 계약·경계·권한·교착 재시도 | 45개 통과, 실패·건너뜀 0: [`contracts.json`](verification/contracts.json) |
+| 커밋 응답 차단 | 실제 COMMIT 응답을 버린 뒤 동일 ID로 원 결과 확인, 값 1 유지: [`commit-response.json`](verification/commit-response.json) |
+| Paper 기능·스레드 | 재시작·이동·두 소비 플러그인·관리자 CAS, 별도 JFR 관측 구간에서 메인 스레드 JDBC I/O 0건: [`paper-smoke.json`](verification/paper-smoke.json), [`paper-io-probe.json`](verification/paper-io-probe.json) |
+| DB 강제 종료·백업 복원 | 성공한 값 복구, 작업 기록 동시 복원, 이전 epoch 거절: [`recovery.json`](verification/recovery.json) |
+| 반복 장애 | 180.571초 동안 10회 중단·재연결, 고유 작업 3,277개와 최종 증가값 일치: [`outage.json`](verification/outage.json) |
+
+반복 장애 시험에는 실제 UNKNOWN_COMMIT_OUTCOME 1건이 포함되며 같은 ID로 복구했습니다. 종료 후 연결·대기 요청·전달 슬롯·보유 요청 바이트·VarStore 플랫폼 스레드는 모두 0입니다. 유한한 관측 구간에서 확인한 결과이며 장기 누수 부재나 운영 RPO/RTO 보장은 아닙니다. 복구 연습의 DB 재시작은 3.508초, 백업 복원·epoch 전환은 1.427초였으며 작은 로컬 시험 DB에서 측정했습니다.
+
+T01–T22와 추가 검증의 근거 연결은 [`release-audit.json`](verification/release-audit.json), 실제 실행한 JAR의 해시는 [`artifacts.json`](verification/artifacts.json)에 있습니다.
+
+### 실제 Paper 부하 측정
+
+Paper 3대·10만 기본 키·읽기 70%/쓰기 30%, 틱당 총 5회 접수로 100요청/초를 목표로 실행했습니다. 기본 부하는 20초 예열 후 60초, 나머지는 각각 20초입니다. 봇이 예제 플러그인을 사용한 상태에서 모든 측정 API 호출을 실제 Paper 메인 스레드에서 제출했습니다. 프로파일링과 DB 장애 시험은 이 측정 구간에 겹치지 않았습니다.
+
+| 부하 | 요청 수 | 읽기 p95 / p99 (ms) | 쓰기 p95 / p99 (ms) | 접수 p99 (ms) | 오류 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 일반 값 ≤1KiB | 6,000 | 20.55 / 38.14 | 36.38 / 69.97 | 0.952 | 0 |
+| STRING 16KiB | 2,000 | 32.35 / 69.60 | 89.52 / 207.24 | 1.754 | 0 |
+| 16키·약 64KiB 트랜잭션 | 2,000 | 1576.68 / 1668.77 | 1917.71 / 2023.52 | 3.832 | 0 |
+| 동일 LONG 키 증가 | 2,000 | 22.47 / 49.34 | 41.11 / 143.86 | 0.622 | 0 |
+
+일반 단계의 쓰기 1,800건은 APPLIED 1,200건과 NO_CHANGE 600건입니다. 예열 때 사용한 값 일부를 다시 제출했기 때문이며, NO_CHANGE도 새 작업 ID의 결과 기록을 커밋합니다. 70/30은 API 읽기·쓰기 호출 비율이며 모든 쓰기가 변수 값을 변경한 부하는 아닙니다.
+
+12,000건의 원시 CSV를 합쳐 순위 기반 백분위수를 계산했습니다. 서버별 백분위수를 평균내지 않았습니다. 일반 부하의 전체 표본은 목표 get p95/p99 25/100ms, write 50/150ms, 접수 p99 1ms를 만족했습니다. 서버별 접수 p99는 0.902–1.049ms여서 한 서버는 1ms를 소폭 넘었습니다.
+
+최대 크기 트랜잭션은 서버마다 별도 16키를 사용했고, 동일 키 경쟁은 별도 단계로 측정했습니다. 최대 크기 단계는 마지막 응답까지 포함한 처리량이 92.24요청/초로 낮아지고 지연이 약 2초에 도달했습니다. 큰 값·최대 크기 트랜잭션에 일반 부하의 지연 수치를 적용하지 않습니다. 동일 키 단계의 최종 값은 600회 증가와 일치했습니다.
+
+이 호스트는 다른 서비스를 함께 실행하는 6 vCPU·약 12GiB VM이며 PostgreSQL과 Paper를 같은 호스트에서 실행했습니다. 설계의 전용 DB 4 vCPU·8GiB·SSD 기준 환경과 다르며, 물리 저장장치 성능을 보증하지 않습니다. 각 Paper에는 `-Xmx640m`, `ActiveProcessorCount=2`를 적용했습니다.
+
+추가로 같은 DB와 실행 중인 Paper 게임 기능 옆에서 별도 Java API 클라이언트 3개를 120초간 측정했습니다. 이 시험은 Paper 메인 스레드 제출 측정이 아닙니다. 새로운 값을 쓰는 일반 단계는 쓰기 1,800건 전부 APPLIED였고 전체 6,000건에서 오류 0건, 읽기 p95/p99 24.96/57.64ms, 쓰기 46.41/84.67ms, 접수 p99 1.743ms였습니다.
+
+별도 클라이언트가 **같은 16키에 최대 크기 트랜잭션을 집중**한 단계에서는 쓰기 600건 중 525건이 오류(시간초과 195, 저장소 사용 불가 323, 커밋 결과 불명확 7)로 끝났고, 직후 동일 키 단계에서도 회복 전 24건의 오류가 기록됐습니다. 이는 측정한 처리 한계이며 성공으로 집계하지 않습니다. 고정된 처리량을 보장하지 않으며, 이런 집중 부하에는 요청량 제한과 동일 작업 ID를 통한 결과 확인이 필요합니다. 원시 오류·응답·자원 기록은 [`load-report.json`](verification/load-report.json), [`load-requests.csv`](verification/load-requests.csv), [`load-resources.csv`](verification/load-resources.csv), [`load-environment.json`](verification/load-environment.json)에 있습니다.
+
+원시 표본과 재현 방법: [`load-paper-summary.json`](verification/load-paper-summary.json), [`paper-benchmark/`](verification/paper-benchmark/), `python3 scripts/aggregate-load.py`. 이전 SNAPSHOT의 예열 전·JFR 동시 수집·공유 트랜잭션 키 측정도 [`diagnostic-initial/`](verification/diagnostic-initial/)에 별도 보존했습니다. 코드와 측정 조건이 달라 성능 개선의 원인을 단일 요인으로 해석하지 않습니다.
 
 후속 범위는 별도 캐시 API, 알림/outbox, Skript 애드온, Codec·JSON·TTL·프록시/Folia 어댑터입니다. 1.0은 캐시·Redis·SQLite/MySQL·REST·웹 UI·자동 객체 수집·전체 인벤토리·세션 소유권을 포함하지 않습니다.
 
