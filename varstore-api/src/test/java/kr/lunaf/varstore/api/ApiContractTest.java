@@ -78,4 +78,24 @@ class ApiContractTest {
         assertTrue(original.asReplay().replayed());
         assertThrows(IllegalArgumentException.class, () -> new OperationStatus(id, OperationStatus.State.COMPLETED, Optional.empty()));
     }
+    @Test void explicitOwnerIdsSupportUnicodeWithinEncodedByteLimit() {
+        assertEquals("길드-가람", Owner.system("길드-가람").id());
+        assertEquals("가".repeat(42) + "ab", Owner.system("가".repeat(42) + "ab").id());
+        assertEquals("😀".repeat(32), Owner.system("😀".repeat(32)).id());
+        assertEquals("x".repeat(128), Owner.system("x".repeat(128)).id());
+        code(ErrorCode.INVALID_ARGUMENT, () -> Owner.system("가".repeat(43)));
+        code(ErrorCode.INVALID_ARGUMENT, () -> Owner.system("😀".repeat(33)));
+        code(ErrorCode.INVALID_ARGUMENT, () -> Owner.system("x".repeat(129)));
+        for (String invalid : List.of("", "has space", "a\tb", "a\nb", "a\u00a0b", "a\u200bb", "a/b", "a\\b", "a:b", "\uD800", "\uDC00"))
+            code(ErrorCode.INVALID_ARGUMENT, () -> Owner.system(invalid));
+        code(ErrorCode.INVALID_ARGUMENT, () -> Owner.system(null));
+        // Explicit Unicode IDs are never silently normalized into another identifier.
+        assertEquals("e\u0301", Owner.system("e\u0301").id());
+        assertNotEquals(Owner.system("é"), Owner.system("e\u0301"));
+        code(ErrorCode.INVALID_ARGUMENT, () -> new Owner("PLAYER", "길드-가람"));
+        code(ErrorCode.INVALID_ARGUMENT, () -> new Owner("PLAYER", "01234567-89AB-CDEF-0123-456789ABCDEF"));
+        Address accented = new Address("production", "example", ScopeKind.NETWORK, "_", Owner.system("é"), "key");
+        Address korean = new Address("production", "example", ScopeKind.NETWORK, "_", Owner.system("가"), "key");
+        assertTrue(accented.compareTo(korean) < 0, "Owner order compares canonical UTF-8 bytes");
+    }
 }

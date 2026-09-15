@@ -5,9 +5,15 @@
   "value": 1,
   "proxy": {
     "armed": false,
-    "triggered": 1,
-    "dropped_bytes": 23,
-    "triggered_at": 1789474222.7102797
+    "triggered": 2,
+    "dropped_bytes": 46,
+    "triggered_at": 1789475934.6608732,
+    "countsAreCumulative": true
   },
-  "recordedAt": "2026-09-15T12:10:26Z"
+  "recordedAt": "2026-09-15T12:38:58.066921+00:00",
+  "version": "1.0.0",
+  "thisRun": {
+    "triggered": 1,
+    "droppedBytes": 23
+  }
 }

@@ -58,7 +58,7 @@ public final class LoadHarness {
             try(var s=c.prepareStatement("INSERT INTO vs_variables(network_id,namespace,scope_kind,scope_id,owner_type,owner_id,variable_key,value_type,string_value,generation,revision,deleted,last_writer) SELECT ?,'varstorebench','NETWORK','_','SYSTEM','load','key/'||g,'STRING',repeat('x',1024),gen_random_uuid(),1,false,'bench-seed' FROM generate_series(0,99999) g ON CONFLICT DO NOTHING")){
                 s.setString(1,network);inserted+=s.executeUpdate();
             }
-            try(var s=c.prepareStatement("INSERT INTO vs_variables(network_id,namespace,scope_kind,scope_id,owner_type,owner_id,variable_key,value_type,string_value,generation,revision,deleted,last_writer) SELECT ?,'varstorebench','NETWORK','_','SYSTEM','load',name,'STRING',payload,gen_random_uuid(),1,false,'bench-seed' FROM (SELECT 'large' AS name,repeat('x',16384) AS payload UNION ALL SELECT 'txn/'||g,repeat('x',1024) FROM generate_series(0,15) g) seed ON CONFLICT DO NOTHING")){
+            try(var s=c.prepareStatement("INSERT INTO vs_variables(network_id,namespace,scope_kind,scope_id,owner_type,owner_id,variable_key,value_type,string_value,generation,revision,deleted,last_writer) SELECT ?,'varstorebench','NETWORK','_','SYSTEM','load',name,'STRING',payload,gen_random_uuid(),1,false,'bench-seed' FROM (SELECT 'large' AS name,repeat('x',16384) AS payload UNION ALL SELECT 'txn/'||node||'/'||g,repeat('x',1024) FROM generate_series(0,2) node CROSS JOIN generate_series(0,15) g) seed ON CONFLICT DO NOTHING")){
                 s.setString(1,network);inserted+=s.executeUpdate();
             }
             try(var s=c.prepareStatement("INSERT INTO vs_variables(network_id,namespace,scope_kind,scope_id,owner_type,owner_id,variable_key,value_type,long_value,generation,revision,deleted,last_writer) VALUES(?,'varstorebench','NETWORK','_','SYSTEM','load','hot','LONG',0,gen_random_uuid(),1,false,'bench-seed') ON CONFLICT DO NOTHING")){
@@ -73,6 +73,7 @@ public final class LoadHarness {
         report.put("startedAt",started.toString());report.put("network",network);
         report.put("topology","three independent VarStore core clients in one standalone JVM, direct PostgreSQL primary");
         report.put("paperSubmissionMeasurement",false);
+        report.put("threadMeasurementScope","ThreadMXBean/getAllStackTraces enumerate platform threads; virtual callback delivery threads are not included in thread-count gauges");
         report.put("paperDatabaseRelationship",System.getenv().getOrDefault("VARSTORE_LOAD_PAPER_TOPOLOGY","not established; inspect Paper evidence separately"));
         report.put("paperConcurrencyEvidence",System.getenv().getOrDefault("VARSTORE_LOAD_PAPER_EVIDENCE","not supplied; no simultaneous Paper gameplay claim"));
         report.put("requestedProfile",Map.of("keys",KEY_COUNT,"clients",CLIENTS,"requestsPerSecond",rate,"readPercent",70,"writePercent",30,"baselineValueBytes",1024));
@@ -209,15 +210,15 @@ public final class LoadHarness {
     private Map<String,Object> resource(String point){
         var memory=ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();Map<String,Object> result=new LinkedHashMap<>();
         result.put("point",point);result.put("at",Instant.now().toString());result.put("heapUsedBytes",memory.getUsed());result.put("heapCommittedBytes",memory.getCommitted());result.put("threadCount",ManagementFactory.getThreadMXBean().getThreadCount());result.put("varstoreThreads",countStoreThreads());result.put("outstanding",outstanding.get());
-        long connections=0,queued=0,bytes=0;for(VarStore store:stores){if(store.state()!=StoreState.CLOSED){StoreMetrics m=store.metrics();connections+=m.activeConnections();queued+=m.queuedRequests();bytes+=m.queuedBytes();}}
-        result.put("activeConnections",connections);result.put("queuedRequests",queued);result.put("queuedBytes",bytes);return result;
+        long connections=0,queued=0,bytes=0,pending=0,retained=0;for(VarStore store:stores){if(store.state()!=StoreState.CLOSED){StoreMetrics m=store.metrics();connections+=m.activeConnections();queued+=m.queuedRequests();bytes+=m.queuedBytes();pending+=m.pendingDeliveries();retained+=m.retainedRequestBytes();}}
+        result.put("activeConnections",connections);result.put("queuedRequests",queued);result.put("queuedBytes",bytes);result.put("pendingDeliveries",pending);result.put("retainedRequestBytes",retained);return result;
     }
     private int activeClientConnections(){try(Connection c=connection();var s=c.createStatement();var r=s.executeQuery("SELECT count(*) FROM pg_stat_activity WHERE application_name LIKE 'VarStore/load-%'")){r.next();return r.getInt(1);}catch(SQLException e){return -1;}}
     private static long countStoreThreads(){return Thread.getAllStackTraces().keySet().stream().filter(t->t.isAlive()&&(t.getName().startsWith("varstore-")||t.getName().startsWith("VarStore-load-")||t.getName().startsWith("VarStore-borrow-load-"))).count();}
     private void writeSamples(Path path)throws IOException {
         try(var out=Files.newBufferedWriter(path)){out.write("phase,index,client,operation,submission_us,latency_us,schedule_lag_us,error\n");for(Sample s:samples)out.write(s.phase+","+s.index+","+s.client+","+s.operation+","+s.submissionNanos/1000.0+","+s.latencyNanos/1000.0+","+s.scheduleLagNanos/1000.0+","+s.error+"\n");}
     }
-    private void writeResources(Path path)throws IOException {try(var out=Files.newBufferedWriter(path)){out.write("point,at,heap_used_bytes,heap_committed_bytes,thread_count,varstore_threads,outstanding,active_connections,queued_requests,queued_bytes\n");for(var r:resources)out.write(r.get("point")+","+r.get("at")+","+r.get("heapUsedBytes")+","+r.get("heapCommittedBytes")+","+r.get("threadCount")+","+r.get("varstoreThreads")+","+r.get("outstanding")+","+r.get("activeConnections")+","+r.get("queuedRequests")+","+r.get("queuedBytes")+"\n");}}
+    private void writeResources(Path path)throws IOException {try(var out=Files.newBufferedWriter(path)){out.write("point,at,heap_used_bytes,heap_committed_bytes,thread_count,varstore_threads,outstanding,active_connections,queued_requests,queued_bytes,pending_deliveries,retained_request_bytes\n");for(var r:resources)out.write(r.get("point")+","+r.get("at")+","+r.get("heapUsedBytes")+","+r.get("heapCommittedBytes")+","+r.get("threadCount")+","+r.get("varstoreThreads")+","+r.get("outstanding")+","+r.get("activeConnections")+","+r.get("queuedRequests")+","+r.get("queuedBytes")+","+r.get("pendingDeliveries")+","+r.get("retainedRequestBytes")+"\n");}}
     private static long percentile(long[] values,double percentile){if(values.length==0)return 0;Arrays.sort(values);return values[Math.max(0,(int)Math.ceil(values.length*percentile)-1)];}
     private Connection connection()throws SQLException{return DriverManager.getConnection(jdbc,username,password);}
     private static String required(String name){String value=System.getenv(name);if(value==null||value.isBlank())throw new IllegalArgumentException(name+" must select a disposable test database");return value;}

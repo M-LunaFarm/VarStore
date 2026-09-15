@@ -40,8 +40,8 @@ jobs:
         with:
           name: varstore-distribution
           path: |
-            varstore-paper/build/libs/*-SNAPSHOT.jar
+            varstore-paper/build/libs/*-1.0.0.jar
             varstore-api/build/libs/*.jar
-            varstore-tools/build/libs/*-SNAPSHOT.jar
+            varstore-tools/build/libs/*-1.0.0.jar
             varstore-testkit/build/libs/*.jar
             examples/*/build/libs/*.jar

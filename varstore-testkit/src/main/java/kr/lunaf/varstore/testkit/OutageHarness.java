@@ -37,7 +37,7 @@ public final class OutageHarness {
         if(!jdbc.equals("jdbc:postgresql://127.0.0.1:25435/varstore_soak"))throw new IllegalArgumentException("Harness only targets dedicated loopback varstore_soak DB");
         Map<String,Object> report=new LinkedHashMap<>();report.put("startedAt",Instant.now().toString());report.put("network",network);
         report.put("scope","one continuous Java21 core client; actual repeated PostgreSQL18 container outages; no Paper tick-latency claim");
-        report.put("limits",Map.of("dbWorkers",2,"maximumPoolConnections",2,"queueMaxRequests",32,"queueMaxBytes",262144,"requestTimeoutMillis",1500,"borrowerThreadCap",64,"observedVarStoreThreadCeiling",80,"usedHeapCeilingBytes",134217728,"postGcGrowthCeilingBytes",33554432));
+        report.put("limits",Map.ofEntries(Map.entry("dbWorkers",2),Map.entry("maximumPoolConnections",2),Map.entry("queueMaxRequests",32),Map.entry("queueMaxBytes",262144),Map.entry("requestTimeoutMillis",1500),Map.entry("borrowerThreadCap",64),Map.entry("observedVarStorePlatformThreadCeiling",80),Map.entry("usedHeapCeilingBytes",134217728),Map.entry("postGcGrowthCeilingBytes",33554432),Map.entry("pendingDeliveries",34),Map.entry("retainedRequestBytes",393216)));
         begun=System.nanoTime();
         try{
             Class.forName("org.postgresql.Driver");try(var c=connection()){SchemaMigrator.migrate(c,network);}
@@ -65,15 +65,15 @@ public final class OutageHarness {
         finally{
             pause();workload.shutdownNow();workload.awaitTermination(5,TimeUnit.SECONDS);
             if(store!=null)store.close();
-            long limit=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(varstoreThreads()>0&&System.nanoTime()<limit)Thread.sleep(25);
+            long limit=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while((varstoreThreads()>0||metrics().pendingDeliveries()>0)&&System.nanoTime()<limit)Thread.sleep(25);
             long finalHeap=postGcHeap();long threads=varstoreThreads();int connections=connections();
             sample("after_close",finalHeap);report.put("elapsedSeconds",(System.nanoTime()-begun)/1_000_000_000.0);report.put("cycles",recoveredCycles);
             report.put("readSuccesses",readSuccesses.get());report.put("readErrors",readErrors.get());report.put("writeFirstAttemptSuccesses",writeSuccesses.get());report.put("writeFirstAttemptErrors",writeErrors.get());report.put("stableIdReconciliations",reconciled.get());report.put("replayedReceipts",replayed.get());
             Map<String,Long> errors=new TreeMap<>();errorCounts.forEach((key,value)->errors.put(key,value.get()));report.put("errors",errors);
             report.put("resources",samples);report.put("baselinePostGcHeapBytes",baselineHeap);report.put("finalPostGcHeapBytes",finalHeap);report.put("postGcHeapGrowthBytes",finalHeap-baselineHeap);
-            report.put("varstoreThreadsAfterClose",threads);report.put("clientConnectionsAfterClose",connections);report.put("outstandingAfterClose",outstanding.get());
-            report.put("limitations",List.of("A finite outage rehearsal observes resource bounds during this interval; it cannot prove freedom from all long-term leaks.","Heap measurements include the harness's retained unique operation-ID set and JVM housekeeping.","Heap checkpoints explicitly request GC; normal interval samples do not.","A successful read racing with container stop may reflect a commit before the outage; each fully stopped interval separately requires failed reads and failed writes."));
-            if(threads!=0||connections!=0||outstanding.get()!=0||finalHeap-baselineHeap>33554432){report.put("status","FAIL");report.put("cleanupFailure",true);}
+            report.put("varstorePlatformThreadsAfterClose",threads);report.put("pendingDeliveriesAfterClose",metrics().pendingDeliveries());report.put("retainedRequestBytesAfterClose",metrics().retainedRequestBytes());report.put("clientConnectionsAfterClose",connections);report.put("outstandingAfterClose",outstanding.get());
+            report.put("limitations",List.of("A finite outage rehearsal observes resource bounds during this interval; it cannot prove freedom from all long-term leaks.","Heap measurements include the harness's retained unique operation-ID set and JVM housekeeping.","Heap checkpoints explicitly request GC; normal interval samples do not.","Thread enumeration measures platform threads; pendingDeliveries separately measures reserved asynchronous response/callback work including virtual threads.","A successful read racing with container stop may reflect a commit before the outage; each fully stopped interval separately requires failed reads and failed writes."));
+            if(threads!=0||connections!=0||outstanding.get()!=0||metrics().pendingDeliveries()!=0||metrics().retainedRequestBytes()!=0||finalHeap-baselineHeap>33554432){report.put("status","FAIL");report.put("cleanupFailure",true);}
             Files.createDirectories(output.toAbsolutePath().getParent());Files.writeString(output,json(report)+"\n");emit("OUTAGE_FINISHED "+report.get("status"));
             if(!"PASS".equals(report.get("status")))throw new AssertionError("Outage rehearsal failed; inspect report");
         }
@@ -120,15 +120,16 @@ public final class OutageHarness {
         if(!Set.of(ErrorCode.STORAGE_UNAVAILABLE,ErrorCode.UNKNOWN_COMMIT_OUTCOME,ErrorCode.OVERLOADED,ErrorCode.REQUEST_TIMEOUT,ErrorCode.NOT_READY).contains(exception.code()))throw new AssertionError("Unexpected storage error: "+exception.code());
         errorCounts.computeIfAbsent(exception.code().name(),ignored->new AtomicLong()).incrementAndGet();
     }
-    private void checkMetrics(){StoreMetrics m=store.metrics();if(m.queuedRequests()>32||m.queuedBytes()>262144||m.activeConnections()>2)throw new AssertionError("Configured queue or pool bound exceeded");}
+    private StoreMetrics metrics(){return store==null?StoreMetrics.empty():store.metrics();}
+    private void checkMetrics(){StoreMetrics m=metrics();if(m.queuedRequests()>32||m.queuedBytes()>262144||m.activeConnections()>2||m.pendingDeliveries()>34||m.retainedRequestBytes()>393216)throw new AssertionError("Configured queue, pool or delivery bound exceeded");}
     private void pause(){synchronized(production){paused=true;}}
     private void resume(){synchronized(production){paused=false;}}
     private void checkFatal(){Throwable failure=fatal.get();if(failure!=null)throw new AssertionError("Asynchronous contract failure",failure);}
     private void sample(String point,long postGc){
         long used=ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();long threads=varstoreThreads();
         if(used>134217728||threads>80)throw new AssertionError("Observed resource ceiling exceeded");
-        Map<String,Object> values=new LinkedHashMap<>();values.put("point",point);values.put("elapsedSeconds",(System.nanoTime()-begun)/1_000_000_000.0);values.put("heapUsedBytes",used);values.put("postGcHeapBytes",postGc);values.put("jvmLiveThreads",ManagementFactory.getThreadMXBean().getThreadCount());values.put("varstoreThreads",threads);values.put("outstanding",outstanding.get());values.put("unresolvedIds",unresolved.size());
-        if(store!=null&&store.state()!=StoreState.CLOSED){checkMetrics();StoreMetrics m=store.metrics();values.put("activeConnections",m.activeConnections());values.put("queuedRequests",m.queuedRequests());values.put("queuedBytes",m.queuedBytes());values.put("state",store.state().name());}
+        Map<String,Object> values=new LinkedHashMap<>();values.put("point",point);values.put("elapsedSeconds",(System.nanoTime()-begun)/1_000_000_000.0);values.put("heapUsedBytes",used);values.put("postGcHeapBytes",postGc);values.put("jvmPlatformThreads",ManagementFactory.getThreadMXBean().getThreadCount());values.put("varstorePlatformThreads",threads);values.put("outstanding",outstanding.get());values.put("unresolvedIds",unresolved.size());
+        if(store!=null){checkMetrics();StoreMetrics m=metrics();values.put("pendingDeliveries",m.pendingDeliveries());values.put("retainedRequestBytes",m.retainedRequestBytes());values.put("activeConnections",m.activeConnections());values.put("queuedRequests",m.queuedRequests());values.put("queuedBytes",m.queuedBytes());values.put("state",store.state().name());}
         samples.add(values);
     }
     private long postGcHeap()throws InterruptedException{System.gc();Thread.sleep(150);return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();}

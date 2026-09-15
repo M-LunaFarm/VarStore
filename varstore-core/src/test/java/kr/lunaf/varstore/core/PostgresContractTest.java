@@ -69,8 +69,12 @@ class PostgresContractTest {
         expect(ErrorCode.ALREADY_PROCESSED_RESULT_EXPIRED,data.set(key,2L,id));
         assertEquals(OperationStatus.State.RESULT_EXPIRED,await(store.namespace("contracts").operation(id)).state());
         assertEquals(2L,await(data.get(key)).orElseThrow());
+        long storageErrorsBefore=store.metrics().storageErrors();
         try(Connection c=connection()){SchemaMigrator.rotateEpoch(c,network);}
         expect(ErrorCode.STALE_EPOCH,data.set(key,3L,UUID.randomUUID()));
+        assertEquals(StoreState.DEGRADED,store.state());
+        expect(ErrorCode.STALE_EPOCH,data.get(key));
+        assertEquals(storageErrorsBefore+2,store.metrics().storageErrors(),"Both the DB rejection and the fail-fast degraded request count as storage errors");
         VarStore fresh=open("fresh");assertEquals(2L,await(data(fresh).get(key)).orElseThrow());await(data(fresh).set(key,4L));
     }
 
@@ -130,6 +134,45 @@ class PostgresContractTest {
             assertTrue(names.getFirst().startsWith("varstore-completion"),"Callback uses isolated completion executor");
         }finally{release.countDown();}
         callback.get(5,TimeUnit.SECONDS);
+    }
+
+    @Test void blockedCallbacksDoNotStarveOtherFuturesAndDeliveryCapacityStaysBounded() throws Exception {
+        VarStore store=open(new StoreConfig(settings("delivery"),1,2,8_388_608,Duration.ofSeconds(5),Duration.ofSeconds(2),3));
+        var data=data(store);var key=VarKey.longKey("delivery");await(data.set(key,0L));
+        CountDownLatch started=new CountDownLatch(4),release=new CountDownLatch(1);
+        List<CompletableFuture<Void>> blocked=new ArrayList<>();
+        try {
+            // Attach before SQL can finish, so callbacks exercise provider delivery
+            // rather than the attaching test thread's completed-stage behavior.
+            for(int index=0;index<2;index++) blocked.add(blockedDelivery(data,key,index+1L,started,release));
+            eventually(()->started.getCount()==2);
+            assertEquals(Outcome.APPLIED,data.set(key,10L).toCompletableFuture().get(2,TimeUnit.SECONDS).outcome(),"Two blocked consumer callbacks must not starve another write receipt");
+            assertEquals(10L,data.get(key).toCompletableFuture().get(2,TimeUnit.SECONDS).orElseThrow(),"A separate read future must also complete");
+            // queueMaxRequests + 2 is the independent delivery budget. Database
+            // admission has already been released, but callbacks still own it.
+            for(int index=0;index<2;index++) blocked.add(blockedDelivery(data,key,index+20L,started,release));
+            assertTrue(started.await(5,TimeUnit.SECONDS));
+            assertEquals(0,store.metrics().queuedRequests(),"Completed DB requests do not occupy DB admission");
+            assertEquals(4,store.metrics().pendingDeliveries(),"Blocked virtual callbacks retain the bounded delivery reservations");
+            assertTrue(store.metrics().retainedRequestBytes()>0,"Callback ownership retains its accounted request bytes");
+            UUID refused=UUID.randomUUID();
+            assertEquals(refused,expect(ErrorCode.OVERLOADED,data.set(key,99L,refused)).operationId());
+        } finally { release.countDown(); }
+        CompletableFuture.allOf(blocked.toArray(CompletableFuture[]::new)).get(5,TimeUnit.SECONDS);
+        eventually(()->store.metrics().pendingDeliveries()==0&&store.metrics().retainedRequestBytes()==0);
+        assertEquals(Outcome.APPLIED,data.set(key,100L).toCompletableFuture().get(2,TimeUnit.SECONDS).outcome(),"Releasing callbacks restores bounded delivery capacity");
+        assertEquals(100L,await(data.get(key)).orElseThrow());
+    }
+    private CompletableFuture<Void> blockedDelivery(VarStore.Data data,VarKey<Long> key,long value,CountDownLatch started,CountDownLatch release) throws Exception {
+        try(Connection c=connection()) {
+            lock(c,key.name());
+            CompletableFuture<Void> future=data.set(key,value).thenAccept(receipt->{
+                started.countDown();
+                try { if(!release.await(15,TimeUnit.SECONDS))throw new AssertionError("Blocked callback was not released"); }
+                catch(InterruptedException error){Thread.currentThread().interrupt();throw new CompletionException(error);}
+            }).toCompletableFuture();
+            c.commit();return future;
+        }
     }
 
     @Test void shutdownDistinguishesQueuedFromUnconfirmedWrite() throws Exception {

@@ -2,7 +2,7 @@
 
 Paper 서버들이 공용 PostgreSQL Primary에 영속 변수를 저장하는 Java 21 플러그인입니다. 모든 저장 API는 비동기이며 쓰기 성공은 DB 커밋 응답을 확인한 뒤 전달합니다. BungeeCord는 접속·이동만 담당하고 저장 요청을 중계하지 않습니다. 접속자가 없어도 저장할 수 있습니다.
 
-**현재 버전: 1.0.0-SNAPSHOT — 정식 출시 검증 진행 중.** 아래 검증 기록에 없는 환경은 지원을 확인하지 않았습니다. 실측 결과를 성능 보장으로 해석하지 마세요.
+**현재 버전: 1.0.0 — 정식 출시 검증 진행 중.** 아래 검증 기록에 없는 환경은 지원을 확인하지 않았습니다. 실측 결과를 성능 보장으로 해석하지 마세요.
 
 ## 구성과 빌드
 
@@ -14,6 +14,7 @@ Paper 서버들이 공용 PostgreSQL Primary에 영속 변수를 저장하는 Ja
 | `varstore-paper` | Bukkit 서비스, 설정, 관리자 명령, 권한, 감사 |
 | `varstore-tools` | 별도 계정으로 수행하는 마이그레이션·검증·복구 도구 |
 | `varstore-testkit` | 소비 구현에서도 실행할 수 있는 실제 저장 계약 시험 |
+| `varstore-testkit-paper` | 시험 전용 Paper 메인 스레드 부하 측정 플러그인 |
 | `examples/preferences` | 플레이어 알림 설정 저장 예제 |
 | `examples/rewards` | 날짜 조건과 점수를 함께 변경하는 일일 보상 예제 |
 
@@ -29,7 +30,36 @@ export VARSTORE_TEST_DB_PASSWORD='your-test-password'
 
 환경 변수가 없는 로컬 빌드는 DB 시험을 건너뜁니다. CI는 PostgreSQL 18 서비스를 제공하여 DB 시험을 실행합니다. `build/reports/tests`와 JUnit XML에서 건너뛴 시험을 확인하세요. Java 25를 기본으로 쓰는 호스트에서도 Gradle은 Java 21로 실행하세요.
 
-산출물은 각 모듈의 `build/libs/`에 있습니다. 서버에는 `varstore-paper-1.0.0-SNAPSHOT.jar`만 설치합니다. `-thin.jar`는 배포용이 아닙니다. API·sources·Javadoc JAR와 실행 가능한 tools JAR도 생성합니다. JDBC와 HikariCP는 서버 JAR 안에서 별도 패키지로 재배치합니다.
+전체 서버 시험을 재현하려면 전용 시험 DB를 선택하고 다음 순서로 실행합니다. Python 3, Node.js 22 이상, npm, PostgreSQL 클라이언트, Docker가 필요합니다. 서버 시험은 루프백의 오프라인 인증 네트워크를 만들며 운영 프록시 설정으로 사용하지 않습니다. 시험 도구는 실제 테스트 서버 실행을 위해 EULA 동의 파일을 생성합니다.
+
+```sh
+python3 scripts/fetch-test-servers.py
+npm ci --prefix scripts/bots
+export VARSTORE_JDBC_URL="$VARSTORE_TEST_JDBC_URL"
+export VARSTORE_DB_USER="$VARSTORE_TEST_DB_USER"
+export VARSTORE_DB_PASSWORD="$VARSTORE_TEST_DB_PASSWORD"
+python3 scripts/paper-smoke.py
+```
+
+Paper 시험은 세 실제 서버·BungeeCord·봇을 띄워 저장·강제 종료·재시작·이동·권한·두 예제 플러그인을 확인하고, 10만 키에서 일반/큰 값/최대 트랜잭션/동일 키 부하를 기록합니다. 시험 전용 `VarStoreBench` JAR은 운영 서버에 설치하지 않습니다.
+
+실제 DB 장애·복구 시험은 별도 컨테이너를 사용합니다. 다음 고정 계정은 루프백의 폐기 가능한 시험 DB에만 사용합니다.
+
+```sh
+docker run -d --name varstore-fault-postgres -p 127.0.0.1:25435:5432 \
+  -e POSTGRES_USER=varstore -e POSTGRES_PASSWORD=varstore-test \
+  -e POSTGRES_DB=varstore postgres:18
+python3 scripts/recovery-test.py
+python3 scripts/outage-test.py
+```
+
+커밋 응답 단절은 `python3 scripts/fault-proxy.py`를 별도 터미널에 띄우고 `./gradlew :varstore-testkit:faultHarness`로 재현합니다. 기본 프록시는 실제 PostgreSQL 25432 앞의 25433에서 COMMIT 프레임의 응답을 버립니다. 다른 시험 DB명은 `VARSTORE_TEST_JDBC_URL`과 `VARSTORE_FAULT_JDBC_URL`로 동일하게 지정합니다. 프록시와 테스트 서버는 운영 DB에 연결하지 않습니다.
+
+산출물은 각 모듈의 `build/libs/`에 있습니다. 서버에는 `varstore-paper-1.0.0.jar`만 설치합니다. `-thin.jar`는 배포용이 아닙니다. API·sources·Javadoc JAR와 실행 가능한 tools JAR도 생성합니다. JDBC와 HikariCP는 서버 JAR 안에서 별도 패키지로 재배치합니다.
+
+## 배포 파일
+
+[GitHub Releases](https://github.com/M-LunaFarm/VarStore/releases)에서 서버 JAR, API·sources·Javadoc, tools, 예제 JAR, 전체 ZIP과 `SHA256SUMS`를 받습니다. ZIP의 JAR은 `jars/`에 있습니다. ZIP을 푼 위치에서 스키마 도구는 `java -jar jars/varstore-tools-1.0.0.jar migrate production`으로 실행합니다. 아래 모듈 경로·`./gradlew`·`scripts/` 명령은 [소스 저장소](https://github.com/M-LunaFarm/VarStore)를 체크아웃한 경우의 경로입니다. ZIP의 예제 소스는 참고용이며 실행 가능한 Gradle 예제 프로젝트는 소스 저장소에 있습니다.
 
 ## 설치
 
@@ -44,8 +74,8 @@ export VARSTORE_JDBC_URL=jdbc:postgresql://db.example.net:5432/varstore
 export VARSTORE_DB_USER=varstore_migrator
 export VARSTORE_DB_PASSWORD='read-from-your-secret-manager'
 # 기본 TLS 모드는 verify-full입니다. PostgreSQL CA를 pgjdbc 표준 경로에 설치합니다.
-java -jar varstore-tools/build/libs/varstore-tools-1.0.0-SNAPSHOT.jar migrate production
-java -jar varstore-tools/build/libs/varstore-tools-1.0.0-SNAPSHOT.jar validate
+java -jar varstore-tools/build/libs/varstore-tools-1.0.0.jar migrate production
+java -jar varstore-tools/build/libs/varstore-tools-1.0.0.jar validate
 ```
 
 `compose.yaml`은 루프백의 개발용 DB입니다. `VARSTORE_LOCAL_DB_PASSWORD`를 정하고 `docker compose up -d`로 실행합니다. 개발용 비TLS 연결에 한해 tools의 `VARSTORE_TLS_MODE=disable`, Paper의 `storage.tls-mode: disable`을 명시합니다. 원격 배포 기본값은 `verify-full`입니다. JDBC URL에 비밀번호·TLS 우회 옵션을 넣지 않습니다.
@@ -68,7 +98,7 @@ PostgreSQL의 공유 행 잠금에는 해당 테이블의 UPDATE 권한도 필�
 ## 저장 계약
 
 - 주소는 `network / namespace / scope kind / scope id / owner type / owner id / key`의 독립 필드입니다. NETWORK의 scope ID는 `_`, SERVER는 명시적인 서버 ID입니다. 플레이어 소유자는 UUID입니다.
-- network·namespace·server는 소문자 ASCII 영숫자·`.`·`_`·`-`, 각 64바이트까지입니다. key는 `/`도 허용하며 128바이트까지입니다. owner type은 대문자 ASCII 유형 32바이트, owner ID는 128바이트까지입니다. 잘못된 이름은 자동으로 변경하지 않습니다.
+- network·namespace·server는 소문자 ASCII 영숫자·`.`·`_`·`-`, 각 64바이트까지입니다. key는 `/`도 허용하며 128바이트까지입니다. owner type은 대문자 ASCII 유형 32바이트, owner ID는 공백·제어 문자·`/`·`\`·`:`를 제외한 Unicode를 UTF-8 128바이트까지 허용하며 원래 표기를 보존합니다. 잘못된 이름은 자동으로 변경하지 않습니다.
 - STRING은 UTF-8 16KiB, LONG은 부호 있는 64비트 정수, BOOLEAN·UUID를 지원합니다. PostgreSQL text가 저장할 수 없는 NUL과 잘못된 Unicode는 거절합니다. `null`은 값이 아니며 삭제는 `delete`로 요청합니다.
 - 빈 문자열·0·false·값 없음은 다릅니다. 조회 장애·타입 불일치는 예외이며 `getOrDefault`가 기본값으로 감추지 않습니다. 삭제 후에도 기존 타입은 보존합니다.
 - `set`의 동일 값, `increment`의 0 증가, 이미 없는 값 삭제는 NO_CHANGE입니다. CAS·존재 조건 불일치는 CONDITION_FAILED이며 장애가 아닙니다.
@@ -82,7 +112,17 @@ PostgreSQL의 공유 행 잠금에는 해당 테이블의 UPDATE 권한도 필�
 
 ## 소비 API
 
-API JAR은 `compileOnly`로 참조하고 소비 JAR에 포함하지 않습니다. 소비 플러그인의 `plugin.yml`에는 `depend: [VarStore]`를 선언합니다. 공개 API 패키지는 `kr.lunaf.varstore.api`입니다.
+API JAR은 `compileOnly`로 참조하고 소비 JAR에 포함하지 않습니다. 소비 플러그인의 `plugin.yml`에는 `depend: [VarStore]`를 선언합니다. 공개 API 패키지는 `kr.lunaf.varstore.api`입니다. 다운로드한 API를 소비 프로젝트의 `libs/`에 둔 Gradle Kotlin DSL 예입니다.
+
+```kotlin
+dependencies {
+    compileOnly(files("libs/varstore-api-1.0.0.jar"))
+    // PaperVarStore 등록 서비스를 사용할 때만 추가합니다.
+    compileOnly(files("libs/varstore-paper-1.0.0.jar"))
+}
+```
+
+소비 프로젝트에는 Java 21과 Paper API 의존성도 필요합니다. 전체 구성은 [`examples/`](examples/) 및 루트 `build.gradle.kts`를 참고하세요.
 
 ```java
 VarStore store = getServer().getServicesManager().load(VarStore.class);
@@ -98,7 +138,7 @@ store.ready()
     });
 ```
 
-기본 namespace 소유권 검사를 사용하려면 `PaperVarStore` 서비스를 받아 `namespace(this)`로 자기 플러그인 영역을 등록합니다. 이 경우 Paper 모듈도 compileOnly로 참조합니다. 공유 영역은 `shared-namespaces` 설정으로 허용합니다. raw `VarStore`는 신뢰하는 JVM 내 공통 API입니다.
+기본 namespace 소유권 검사를 사용하려면 `PaperVarStore` 서비스를 받아 `register(this, getName().toLowerCase(java.util.Locale.ROOT))`로 자기 플러그인 영역을 등록합니다. 이 경우 Paper 모듈도 compileOnly로 참조합니다. 공유 영역은 `shared-namespaces` 설정으로 허용합니다. raw `VarStore`는 신뢰하는 JVM 내 공통 API입니다.
 
 ```java
 UUID eventId = persistedQuestEventId; // 재시작 후에도 같은 사건에 같은 ID 사용
@@ -110,7 +150,8 @@ data.getVersioned(level).thenCompose(current -> {
     return data.compareAndSet(level, current.get().version(), 20L, UUID.randomUUID());
 });
 
-var balance = data.target(VarKey.longKey("balance"));
+var balanceKey = VarKey.longKey("balance");
+var balance = data.target(balanceKey);
 var claimed = data.target(VarKey.booleanKey("rewards/2026-09-15"));
 var plan = TransactionPlan.builder()
     .requireAbsent(claimed)
@@ -118,14 +159,15 @@ var plan = TransactionPlan.builder()
     .increment(balance, 100)
     .set(claimed, true)
     .build();
-store.namespace("myrpg").execute(plan, persistedRewardEventId);
+data.setIfAbsent(balanceKey, 0L, persistedBalanceInitializationId)
+    .thenCompose(ignored -> store.namespace("myrpg").execute(plan, persistedRewardEventId));
 ```
 
 실제 아이템 지급과 DB 트랜잭션은 하나의 원자적 작업이 아닙니다. 예제 보상은 DB 내 점수만 지급합니다. 외부 지급은 지급 원장·복구·중복 처리 정책이 추가로 필요합니다. 날짜별 키를 만드는 기능에는 키 보존 정책도 필요합니다. 제공한 보상 플러그인은 고정된 마지막 날짜·점수 두 키를 사용합니다.
 
 콜백은 게임 메인 스레드에서 실행된다고 가정하지 않습니다. DB 연결과 잠금을 반환한 뒤 별도 완료 실행기에 전달합니다. 이미 완료된 Future에 붙인 콜백은 붙인 스레드에서 실행될 수 있습니다. `join()`·`get()`으로 게임 스레드를 막지 않습니다. 독립 제출의 순서는 보장하지 않으므로 필요한 순서는 `thenCompose`로 연결합니다.
 
-대기열은 개수·바이트 모두 제한하며 완료 콜백을 기다리는 요청도 한도에 포함합니다. OVERLOADED는 접수 거절이며 저장 성공이 아닙니다. 소비 콜백을 장시간 막으면 후속 요청도 역압을 받습니다. 취소된 Future는 DB 변경 취소의 증거가 아닙니다.
+대기열은 개수·바이트 모두 제한하며 결과 전달을 기다리는 요청도 한도에 포함합니다. 접수한 각 요청은 별도 가상 스레드에서 결과를 전달하므로 느린 소비 콜백이 다른 접수 요청의 완료를 막지 않습니다. 실행 중 콜백까지 보유하는 전달 슬롯은 대기열 개수 한도 + 2, 요청 페이로드 합계는 대기열 바이트 한도 + 128KiB로 제한합니다. OVERLOADED는 접수 거절이며 저장 성공이 아닙니다. 소비 콜백을 장시간 막으면 후속 요청도 역압을 받습니다. 취소된 Future는 DB 변경 취소의 증거가 아닙니다.
 
 ## 상태와 서버 이동
 
@@ -175,11 +217,22 @@ pg_restore --exit-on-error --dbname=varstore_restored varstore.dump
 
 더 짧은 RPO에는 base backup과 WAL 보관을 통한 PITR 또는 관리형 백업을 별도로 구성합니다. pg_dump에 WAL 파일을 붙이는 것은 PITR 구성이 아닙니다. 외부 백업 보관·마지막 백업 성공·디스크 여유·WAL 보관 실패·복구 실측 RPO/RTO를 운영 환경에서 점검하세요.
 
+스키마 버전 1은 도구가 만든 테이블·제약·인덱스를 기준으로 검증하며 사용자 트리거·재작성 규칙·행 보안 정책은 허용하지 않습니다. 운영 테이블을 수동 확장하지 않습니다.
+
 변수 하나를 반복 수정해도 작업 표식은 계속 늘어납니다. 초당 쓰기 10건이면 하루 864,000개 표식입니다. `diagnostics`와 부하 시험 결과로 테이블·인덱스·WAL·백업 비용을 산정하세요. 매 틱 좌표 저장이나 스코어보드 최신값 조회 용도는 권장하지 않습니다.
 
 ## 검증 기록과 출시 기준
 
-검증 기준은 Paper 1.21.11 / Java 21 / PostgreSQL 18입니다. 테스트·부하·복구 결과는 `verification/`의 JSON 및 CSV 산출물로 공개합니다. 실제 기록이 없는 시험은 완료로 보지 않습니다.
+실행 검증 조합은 다음과 같습니다. 테스트·부하·복구 결과는 [`verification/`](verification/)의 JSON 및 CSV로 공개합니다.
+
+| 구성 요소 | 실행 검증 버전 |
+| --- | --- |
+| Paper | 1.21.11, build 132, 서버 3대 |
+| BungeeCord | build 2093, 실제 서버 이동 |
+| Java | OpenJDK 21.0.12 |
+| PostgreSQL | 18.6, `fsync/full_page_writes/synchronous_commit=on` |
+
+Folia, Velocity, 다른 Minecraft 버전과 DB 제품은 이 조합의 지원 범위에 포함하지 않습니다.
 
 정식 1.0 표시는 T01–T22 계약·실제 장애 시험, 두 종류의 소비 플러그인 실사용, 지원 조합, 복구 연습, 권한, 문서·예제·배포 산출물을 확인한 뒤 합니다. 검증 목표 부하는 3대 Paper, 10만 키, 총100요청/초(읽기70%·쓰기30%)입니다. 목표 get p95/p99 25/100ms, write 50/150ms, 접수 p99 1ms는 측정 목표입니다. 본 README에 숫자만 있다는 것으로 통과를 주장하지 않습니다.
 

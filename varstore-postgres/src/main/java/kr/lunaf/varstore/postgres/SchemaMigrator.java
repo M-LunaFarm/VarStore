@@ -40,6 +40,17 @@ public final class SchemaMigrator {
     }
 
     public static void validate(Connection connection) throws SQLException {
+        // Version 1 owns plain tables. User triggers, rewrite rules, or row policies
+        // can change storage semantics without changing columns or index definitions.
+        String unsupported="SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace " +
+                "WHERE n.nspname=current_schema() AND c.relname IN ('vs_networks','vs_variables','vs_operations','vs_admin_audit','vs_schema_history') " +
+                "AND (c.relrowsecurity OR c.relforcerowsecurity " +
+                "OR EXISTS(SELECT 1 FROM pg_trigger t WHERE t.tgrelid=c.oid AND NOT t.tgisinternal) " +
+                "OR EXISTS(SELECT 1 FROM pg_rewrite r WHERE r.ev_class=c.oid) " +
+                "OR EXISTS(SELECT 1 FROM pg_policy p WHERE p.polrelid=c.oid)))";
+        try(var statement=connection.createStatement();var result=statement.executeQuery(unsupported)) {
+            result.next();if(result.getBoolean(1))throw new SQLException("VarStore schema contains unsupported triggers, rewrite rules, or row security");
+        }
         try (var statement = connection.createStatement(); var result = statement.executeQuery("SELECT version,checksum,catalog_checksum FROM vs_schema_history ORDER BY version")) {
             if (!result.next() || result.getInt(1) != VERSION || !sha256(script()).equals(result.getString(2)) || !catalogChecksum(connection).equals(result.getString(3)) || result.next())
                 throw new SQLException("VarStore schema version, migration checksum, or catalog mismatch");

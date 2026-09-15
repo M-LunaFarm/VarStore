@@ -41,6 +41,20 @@ class PostgresContractTest {
         a.write(text,WriteKind.DELETE,null,0,null,UUID.randomUUID(),deadline());assertTrue(b.get(text,deadline()).isEmpty());
         error(ErrorCode.TYPE_MISMATCH,()->set(a,new Target<Long>(text.address(),ValueType.LONG),1L));
     }
+    @Test void unicodeOwnersRemainDistinctThroughTransactionAndReplay(){
+        String key="unicode"+UUID.randomUUID().toString().replace("-","");
+        // Whitespace is forbidden; punctuation alone remains safely bound as an SQL parameter.
+        List<String> ids=List.of("길드-가람","😀".repeat(32),"é","e\u0301","x'OR'1'='1");
+        List<Target<String>> targets=ids.stream().map(id->new Target<String>(
+                new Address("test","contract",ScopeKind.NETWORK,"_",Owner.system(id),key),ValueType.STRING)).toList();
+        var builder=TransactionPlan.builder();
+        for(int index=0;index<targets.size();index++)builder.set(targets.get(index),"value-"+index);
+        var plan=builder.build();UUID operation=UUID.randomUUID();
+        assertEquals(Outcome.APPLIED,a.execute(plan,operation,deadline()).outcome());
+        assertTrue(b.execute(plan,operation,deadline()).replayed());
+        var read=b.getAll(new ArrayList<>(targets),deadline());
+        for(int index=0;index<targets.size();index++)assertEquals("value-"+index,read.get(targets.get(index).address()).orElseThrow().value());
+    }
     @Test void twoIndependentServersPreserveTwoThousandIncrements()throws Exception{
         Target<Long> target=target(ValueType.LONG);set(a,target,0L);
         try(var executor=Executors.newFixedThreadPool(2)){
@@ -175,6 +189,28 @@ class PostgresContractTest {
                     statement.execute("ALTER TABLE vs_variables ADD CONSTRAINT vs_variables_owner_id_check "+definition);
                 }
                 SchemaMigrator.validate(c);
+            }finally{c.rollback();}
+        }
+    }
+
+    @Test void schemaValidationRejectsTriggersRewriteRulesAndRowSecurity()throws Exception{
+        try(var c=connection()){
+            c.setAutoCommit(false);
+            try{
+                Savepoint clean=c.setSavepoint();
+                try(var statement=c.createStatement()){
+                    statement.execute("CREATE FUNCTION unexpected_trigger() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$");
+                    statement.execute("CREATE TRIGGER unexpected BEFORE UPDATE ON vs_variables FOR EACH ROW EXECUTE FUNCTION unexpected_trigger()");
+                }
+                assertThrows(SQLException.class,()->SchemaMigrator.validate(c));c.rollback(clean);SchemaMigrator.validate(c);
+                try(var statement=c.createStatement()){statement.execute("CREATE RULE unexpected_rule AS ON DELETE TO vs_variables DO INSTEAD NOTHING");}
+                assertThrows(SQLException.class,()->SchemaMigrator.validate(c));c.rollback(clean);SchemaMigrator.validate(c);
+                try(var statement=c.createStatement()){statement.execute("ALTER TABLE vs_variables ENABLE ROW LEVEL SECURITY");}
+                assertThrows(SQLException.class,()->SchemaMigrator.validate(c));c.rollback(clean);SchemaMigrator.validate(c);
+                try(var statement=c.createStatement()){statement.execute("ALTER TABLE vs_variables FORCE ROW LEVEL SECURITY");}
+                assertThrows(SQLException.class,()->SchemaMigrator.validate(c));c.rollback(clean);SchemaMigrator.validate(c);
+                try(var statement=c.createStatement()){statement.execute("CREATE POLICY unexpected_policy ON vs_variables USING (true)");}
+                assertThrows(SQLException.class,()->SchemaMigrator.validate(c));c.rollback(clean);SchemaMigrator.validate(c);
             }finally{c.rollback();}
         }
     }

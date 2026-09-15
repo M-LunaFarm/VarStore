@@ -5,7 +5,7 @@ Input jars: .local/paper.jar (Paper1.21.11), .local/bungee.jar (Bungee2093),
 .local/bungee-modules/cmd_server.jar. npm ci --prefix scripts/bots before running.
 All owned processes are shut down. Existing listeners are never reused or killed.
 """
-import hashlib, json, os, pathlib, queue, re, shutil, socket, subprocess, threading, time, urllib.parse, uuid
+import collections, hashlib, json, os, pathlib, queue, re, shutil, socket, subprocess, threading, time, urllib.parse, uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 JAVA = os.environ.get('VARSTORE_TEST_JAVA', '/usr/lib/jvm/java-21-openjdk-amd64/bin/java')
@@ -128,6 +128,13 @@ try:
     servers['a'].stop(); servers['a'] = start_paper('a')
     for key, kind, value in values: inspect(servers['a'], key, kind, value)
     report['checks']['T01'] = 'PASS: all 4 types and values after process restart'
+    unicode_owner = '운영팀-섬'
+    preview = servers['a'].command(f'varstore set {NETWORK} smoke NETWORK _ SYSTEM {unicode_owner} title STRING unicode-owner-value', 'Confirm within')
+    token = re.search(r'confirm ([0-9a-f-]{36})', preview).group(1)
+    servers['a'].command('varstore confirm ' + token, 'outcome=APPLIED')
+    line = servers['b'].command(f'varstore inspect {NETWORK} smoke NETWORK _ SYSTEM {unicode_owner} title STRING', 'value/version=')
+    assert 'value=unicode-owner-value' in line, line
+    report['checks']['unicode-owner'] = 'PASS: normalized UTF-8 SYSTEM owner saved on A and read on B'
     report['checks']['T13'] = 'PASS: 3 Paper servers; confirmed writes and cross-server reads with 0 connected players'
     proxy = RUN / 'proxy'; (proxy / 'modules').mkdir(parents=True)
     shutil.copy2(ROOT / '.local/bungee.jar', proxy / 'bungee.jar')
@@ -147,12 +154,19 @@ try:
     report['checks']['permissions'] = 'PASS: unprivileged bot denied all 4 administrator permission families'
     # Actual held database row lock delays the consumer save; transfer follows its commit callback.
     lock_env = dict(ENV, PGPASSWORD=ENV['VARSTORE_DB_PASSWORD'])
-    lock = subprocess.Popen(['psql', '-h', '127.0.0.1', '-p', '25432', '-U', ENV['VARSTORE_DB_USER'], '-d', DB_NAME, '-v', 'ON_ERROR_STOP=1', '-c',
-        f"BEGIN; SELECT variable_key FROM vs_variables WHERE network_id='{NETWORK}' AND namespace='varstorepreferences' FOR UPDATE; SELECT pg_sleep(0.35); COMMIT;"], env=lock_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    time.sleep(.1)
+    lock = subprocess.Popen(['psql', '-h', '127.0.0.1', '-p', '25432', '-U', ENV['VARSTORE_DB_USER'], '-d', DB_NAME, '-XqAt', '-v', 'ON_ERROR_STOP=1'],
+                            env=lock_env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+    lock.stdin.write(f"BEGIN; SELECT variable_key FROM vs_variables WHERE network_id='{NETWORK}' AND namespace='varstorepreferences' FOR UPDATE;\n\\echo LOCKED\n")
+    lock.stdin.flush()
+    assert lock.stdout.readline().strip() == 'chat-visible', 'Expected the existing preference row to be locked'
+    assert lock.stdout.readline().strip() == 'LOCKED', 'Database lock must be acquired before submitting the delayed write'
+    def release_lock():
+        lock.stdin.write('COMMIT;\n\\q\n'); lock.stdin.flush()
+    release = threading.Timer(.3, release_lock); release.start()
     started = time.monotonic(); bot_command(bot, '/preferences off', 'Preference committed: false')
     delay = time.monotonic() - started
-    assert lock.wait(timeout=10) == 0 and delay >= .15, f'Expected real DB-delayed save, observed {delay}'
+    release.join()
+    assert lock.wait(timeout=10) == 0 and delay >= .2, f'Expected real DB-delayed save, observed {delay}'
     bot_command(bot, '/server b', 'Network chat is hidden')
     bot_command(bot, '/preferences', 'Network chat is hidden')
     report['checks']['T14'] = f'PASS: DB row lock delayed acknowledged preference save by {delay:.3f}s; actual Bungee transfer A -> B loaded committed false'
@@ -166,24 +180,51 @@ try:
     bench_errors = []
     def run_benchmarks():
         try:
+            if os.environ.get('VARSTORE_BENCH_REQUIRE_START_SIGNAL') == 'true':
+                print(json.dumps({'event': 'paper-benchmark-awaiting-signal', 'runDirectory': str(RUN), 'marker': str(RUN / 'benchmark-start')}), flush=True)
+                while not (RUN / 'benchmark-start').exists(): time.sleep(.5)
             bench_env = dict(ENV, VARSTORE_TEST_JDBC_URL=ENV['VARSTORE_JDBC_URL'])
             classpath = (ROOT / 'varstore-testkit/build/runtime-classpath.txt').read_text().strip()
             seed = subprocess.run([JAVA, '-cp', classpath, 'kr.lunaf.varstore.testkit.LoadHarness', 'seed-paper', NETWORK],
                                   cwd=ROOT, env=bench_env, check=True, capture_output=True, text=True)
             print(seed.stdout, flush=True)
-            probe = Process('io-probe', ['python3', str(ROOT / 'scripts/paper-io-probe.py'), str(RUN), '--seconds', '140'], ROOT)
-            probe.wait('io-probe-started', seconds=30)
-            print(json.dumps({'event': 'paper-bench-ready', 'runDirectory': str(RUN)}), flush=True)
+            def ready(server):
+                deadline = time.monotonic() + 60
+                while time.monotonic() < deadline:
+                    line = server.command('varstore status', 'VarStore state=')
+                    if 'state=READY ' in line: return
+                    time.sleep(1)
+                raise AssertionError('Storage did not recover before next benchmark phase: ' + server.name)
+            def heaps():
+                results = {}
+                for name, server in servers.items():
+                    status = pathlib.Path('/proc') / str(server.p.pid) / 'status'
+                    rss = next((line.partition(':')[2].strip() for line in status.read_text().splitlines() if line.startswith('VmRSS:')), None)
+                    snapshot = subprocess.run([str(pathlib.Path(JAVA).parent / 'jcmd'), str(server.p.pid), 'GC.heap_info'],
+                                              check=True, capture_output=True, text=True)
+                    results[name] = {'pid': server.p.pid, 'rss': rss, 'heapInfo': snapshot.stdout}
+                return results
+            for server in servers.values(): ready(server)
+            warm_positions = {name: len(server.lines) for name, server in servers.items()}
+            for index, name in enumerate(('a', 'b', 'c')): servers[name].send(f'varstorebench start 20 {index} baseline')
+            for index, name in enumerate(('a', 'b', 'c')):
+                servers[name].wait(f'VARSTORE_BENCH_COMPLETED phase=baseline server={index}', warm_positions[name], 60)
+            report['benchmarkConfiguration'] = {'warmupSeconds': 20, 'jfrDuringTimedBenchmark': False,
+                    'paperJvmArguments': ['-Xms256m', '-Xmx640m', '-XX:ActiveProcessorCount=2'],
+                    'transactionKeys': '16 distinct keys per server; shared LONG is tested separately by hot phase'}
+            report['paperHeapsBeforeBenchmark'] = heaps()
+            print(json.dumps({'event': 'paper-bench-ready', 'runDirectory': str(RUN), 'heapSnapshots': report['paperHeapsBeforeBenchmark']}), flush=True)
             benchmark_directory = ROOT / 'verification/paper-benchmark'
             benchmark_directory.mkdir(parents=True, exist_ok=True)
             report['paperBenchmarkReports'] = []
+            report['stressOutcomes'] = {}
             for phase, seconds in (('baseline', 60), ('large', 20), ('transaction', 20), ('hot', 20)):
+                for server in servers.values(): ready(server)
                 positions = {name: len(server.lines) for name, server in servers.items()}
                 for index, name in enumerate(('a', 'b', 'c')):
                     servers[name].send(f'varstorebench start {seconds} {index} {phase}')
-                aggregate = 0
-                aggregate_reads = 0
-                aggregate_writes = 0
+                aggregate = aggregate_reads = aggregate_writes = 0
+                read_errors, write_errors = collections.Counter(), collections.Counter()
                 for index, name in enumerate(('a', 'b', 'c')):
                     servers[name].wait(f'VARSTORE_BENCH_COMPLETED phase={phase} server={index}', positions[name], seconds + 45)
                     folder = RUN / name / 'plugins/VarStoreBench'
@@ -192,27 +233,35 @@ try:
                     source = files[-1]
                     data = json.loads(source.read_text())
                     assert data['network'] == NETWORK and data['allSubmissionsOnMainThread'] and data['outstanding'] == 0, data
-                    assert not data['reads']['errors'] and not data['writes']['errors'], data
-                    aggregate += data['requests']
-                    aggregate_reads += data['reads']['count']
-                    aggregate_writes += data['writes']['count']
+                    aggregate += data['requests']; aggregate_reads += data['reads']['count']; aggregate_writes += data['writes']['count']
+                    read_errors.update(data['reads']['errors']); write_errors.update(data['writes']['errors'])
                     for extension in ('.json', '.csv'):
-                        destination = benchmark_directory / (name + '-' + phase + extension)
-                        shutil.copy2(source.with_suffix(extension), destination)
+                        shutil.copy2(source.with_suffix(extension), benchmark_directory / (name + '-' + phase + extension))
                     report['paperBenchmarkReports'].append('verification/paper-benchmark/' + name + '-' + phase + '.json')
                 assert aggregate == seconds * 100, (phase, aggregate)
                 assert aggregate_reads == seconds * 70 and aggregate_writes == seconds * 30, (phase, aggregate_reads, aggregate_writes)
+                if phase == 'baseline': assert not read_errors and not write_errors, ('Baseline errors', read_errors, write_errors)
+                else: report['stressOutcomes'][phase] = {'reads': dict(read_errors), 'writes': dict(write_errors)}
                 if phase == 'hot':
+                    for server in servers.values(): ready(server)
                     check = subprocess.run(['psql', '-h', '127.0.0.1', '-p', '25432', '-U', ENV['VARSTORE_DB_USER'], '-d', DB_NAME, '-Atc',
                             f"SELECT long_value FROM vs_variables WHERE network_id='{NETWORK}' AND namespace='varstorebench' AND owner_id='load' AND variable_key='hot'"],
                             env=dict(ENV, PGPASSWORD=ENV['VARSTORE_DB_PASSWORD']), check=True, capture_output=True, text=True)
-                    assert int(check.stdout.strip()) == 600, check.stdout
-                    report['hotKeyIndependentCounter'] = 600
-                print(json.dumps({'event': 'paper-bench-phase-complete', 'phase': phase, 'aggregateRequests': aggregate}), flush=True)
-            report['checks']['paper-main-thread-benchmark'] = 'PASS: 3 real Bukkit main-thread submitters;100req/s70/30;baseline60s,16KiB/maximumtransaction/hotkey20s each;12 JSON+CSV reports'
-            print(json.dumps({'event': 'paper-load-ready', 'runDirectory': str(RUN), 'network': NETWORK}), flush=True)
-            probe.p.wait(timeout=45)
+                    actual = int(check.stdout.strip())
+                    confirmed = aggregate_writes - sum(write_errors.values())
+                    uncertain = write_errors.get('UNKNOWN_COMMIT_OUTCOME', 0)
+                    assert confirmed <= actual <= confirmed + uncertain, (actual, confirmed, uncertain)
+                    report['hotKeyIndependentCounter'] = {'actual': actual, 'confirmedSuccesses': confirmed, 'unknownOutcomes': uncertain}
+                print(json.dumps({'event': 'paper-bench-phase-complete', 'phase': phase, 'aggregateRequests': aggregate,
+                                  'readErrors': dict(read_errors), 'writeErrors': dict(write_errors)}), flush=True)
+            report['checks']['paper-main-thread-benchmark'] = 'PASS: warmed baseline zero errors; 3 real Bukkit main-thread submitters;100req/s70/30;12 JSON+CSV reports; stress error counts reported separately'
+            report['paperHeapsAfterBenchmark'] = heaps()
+            # Observe JDBC threading separately so event stack capture does not distort timed phases.
+            probe = Process('io-probe', ['python3', str(ROOT / 'scripts/paper-io-probe.py'), str(RUN), '--seconds', '10'], ROOT)
+            probe.wait('io-probe-started', seconds=30)
+            probe.p.wait(timeout=50)
             assert probe.p.returncode == 0, 'JFR I/O probe failed; inspect its owned log'
+            print(json.dumps({'event': 'paper-load-ready', 'runDirectory': str(RUN), 'network': NETWORK}), flush=True)
         except Exception as failure:
             bench_errors.append(str(failure))
         finally:

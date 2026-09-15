@@ -15,6 +15,7 @@ final class AsyncVarStore implements VarStore {
     private volatile PostgresBackend backend;
     private final ThreadPoolExecutor workers;
     private final ExecutorService completions;
+    private final Semaphore deliverySlots;
     private final ScheduledExecutorService monitor;
     private final CompletableFuture<Void> ready = new CompletableFuture<>();
     private final AtomicReference<StoreState> state = new AtomicReference<>(StoreState.STARTING);
@@ -29,6 +30,7 @@ final class AsyncVarStore implements VarStore {
     private final Object admission = new Object();
     private int admitted;
     private long admittedBytes;
+    private long deliveryBytes;
     private final LongAdder requests = new LongAdder(), successes = new LongAdder(), conditions = new LongAdder(), errors = new LongAdder(), replays = new LongAdder(), unknown = new LongAdder();
     private final AtomicInteger consecutiveErrors = new AtomicInteger();
     private final AtomicLongArray latencies = new AtomicLongArray(4096);
@@ -38,8 +40,11 @@ final class AsyncVarStore implements VarStore {
         this.config = config;
         workers = new ThreadPoolExecutor(config.dbWorkers(), config.dbWorkers(), 0, TimeUnit.MILLISECONDS,
                 new ArrayBlockingQueue<>(config.queueMaxRequests()), threads("db"), new ThreadPoolExecutor.AbortPolicy());
-        // Total admitted requests bound this queue even if a consumer blocks its callback.
-        completions = Executors.newFixedThreadPool(2, threads("completion"));
+        // Each accepted request reserves its own delivery slot until consumer callbacks
+        // return. Blocking consumers cannot starve another accepted request or create
+        // unbounded threads. Two spare slots allow completion chains at queue size one.
+        deliverySlots = new Semaphore(config.queueMaxRequests() + 2);
+        completions = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("varstore-completion-", 0).factory());
         monitor = Executors.newSingleThreadScheduledExecutor(threads("health"));
     }
     void start() {
@@ -110,7 +115,8 @@ final class AsyncVarStore implements VarStore {
         Arrays.sort(samples);
         synchronized (admission) {
             return new StoreMetrics(requests.sum(), successes.sum(), conditions.sum(), errors.sum(), replays.sum(), unknown.sum(),
-                    admitted, admittedBytes, backend == null ? 0 : backend.activeConnections(), percentile(samples,.5), percentile(samples,.95), percentile(samples,.99), queueWait.get(), lockWaitMicros, tableBytes, indexBytes);
+                    admitted, admittedBytes, backend == null ? 0 : backend.activeConnections(), percentile(samples,.5), percentile(samples,.95), percentile(samples,.99), queueWait.get(), lockWaitMicros, tableBytes, indexBytes,
+                    config.queueMaxRequests() + 2 - deliverySlots.availablePermits(), deliveryBytes);
         }
     }
     private static long percentile(long[] a,double p) { return a.length == 0 ? 0 : a[Math.min(a.length-1,(int)Math.ceil(a.length*p)-1)]; }
@@ -131,10 +137,15 @@ final class AsyncVarStore implements VarStore {
         Request<T> r;
         synchronized (admission) {
             StoreState s = state.get();
-            if (s != StoreState.READY) return CompletableFuture.failedStage(failure(s == StoreState.DRAINING || s == StoreState.CLOSED ? ErrorCode.SHUTTING_DOWN : lastError == ErrorCode.STALE_EPOCH ? ErrorCode.STALE_EPOCH : s == StoreState.DEGRADED ? ErrorCode.STORAGE_UNAVAILABLE : ErrorCode.NOT_READY,id));
-            if (admitted >= config.queueMaxRequests() || bytes > config.queueMaxBytes() - admittedBytes)
+            if (s != StoreState.READY) {
+                ErrorCode code = s == StoreState.DRAINING || s == StoreState.CLOSED ? ErrorCode.SHUTTING_DOWN : lastError == ErrorCode.STALE_EPOCH ? ErrorCode.STALE_EPOCH : s == StoreState.DEGRADED ? ErrorCode.STORAGE_UNAVAILABLE : ErrorCode.NOT_READY;
+                if (code == ErrorCode.STORAGE_UNAVAILABLE || code == ErrorCode.STALE_EPOCH) errors.increment();
+                return CompletableFuture.failedStage(failure(code,id));
+            }
+            if (admitted >= config.queueMaxRequests() || bytes > config.queueMaxBytes() - admittedBytes
+                    || bytes > config.queueMaxBytes() + 2L * 65536 - deliveryBytes || !deliverySlots.tryAcquire())
                 return CompletableFuture.failedStage(failure(ErrorCode.OVERLOADED,id));
-            admitted++; admittedBytes += bytes;
+            admitted++; admittedBytes += bytes; deliveryBytes += bytes;
             r = new Request<>(bytes,id,write,work); inFlight.add(r);
             try { workers.execute(r); }
             catch (RejectedExecutionException e) { r.finish(null,failure(ErrorCode.OVERLOADED,id)); }
@@ -170,14 +181,19 @@ final class AsyncVarStore implements VarStore {
         }
         void finish(T result,Throwable failed) {
             if (phase.getAndSet(2)==2) return;
-            latencies.set((int)(sampleIndex.getAndIncrement()%latencies.length()),TimeUnit.NANOSECONDS.toMicros(System.nanoTime()-submitted));
             Runnable deliver = () -> {
                 // Release admission before invoking consumer code so thenCompose can
-                // submit its next request even with a one-request queue. At most two
-                // delivering callbacks remain outside the bounded waiting queue.
+                // submit its next request even with a one-request queue. The separate
+                // reserved delivery slot bounds callbacks after admission is released.
                 inFlight.remove(this);
                 synchronized(admission) { admitted--;admittedBytes-=bytes;admission.notifyAll(); }
-                if (failed==null) future.complete(result); else future.completeExceptionally(failed);
+                latencies.set((int)(sampleIndex.getAndIncrement()%latencies.length()),TimeUnit.NANOSECONDS.toMicros(System.nanoTime()-submitted));
+                try {
+                    if (failed==null) future.complete(result); else future.completeExceptionally(failed);
+                } finally {
+                    synchronized(admission) { deliveryBytes-=bytes; }
+                    deliverySlots.release();
+                }
             };
             try { completions.execute(deliver); }
             catch (RejectedExecutionException e) { Thread.ofVirtual().name("varstore-final-completion").start(deliver); }
@@ -251,10 +267,13 @@ final class AsyncVarStore implements VarStore {
         for(Runnable queued:workers.shutdownNow()) {
             if(queued instanceof AsyncVarStore.Request<?> r) r.finish(null,failure(ErrorCode.SHUTTING_DOWN,r.id));
         }
-        if(backend!=null)backend.close();
         for(Request<?> r:inFlight) {
             if(r.phase.get()==1) r.finish(null,failure(r.write?ErrorCode.UNKNOWN_COMMIT_OUTCOME:ErrorCode.SHUTTING_DOWN,r.id));
         }
+        // Classify still-running work before aborting connections. Otherwise an abort
+        // races the deadline result and can disguise an unconfirmed write as a generic
+        // connection failure. Its original operation ID remains available for recovery.
+        if(backend!=null)backend.close();
         if(!ready.isDone())completions.execute(() -> ready.completeExceptionally(failure(ErrorCode.SHUTTING_DOWN,null)));
         transition(StoreState.CLOSED);completions.shutdown();
         try { completions.awaitTermination(Math.max(0,until-System.nanoTime()),TimeUnit.NANOSECONDS); }

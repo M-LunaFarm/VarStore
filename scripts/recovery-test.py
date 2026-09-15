@@ -20,7 +20,12 @@ def ready():
         if subprocess.run(['docker','exec',container,'pg_isready','-U','varstore'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:return
         time.sleep(.1)
     raise AssertionError('Fault database did not recover')
+info=json.loads(run(['docker','inspect',container]).stdout)[0]
+assert info['Config']['Image'].startswith('postgres:18'), 'Expected dedicated PostgreSQL18 container'
+assert any(b['HostIp']=='127.0.0.1' and b['HostPort']=='25435' for b in info['HostConfig']['PortBindings']['5432/tcp']), 'Expected dedicated loopback port'
 ready()
+exists=run(['docker','exec',container,'psql','-U','varstore','-d','postgres','-Atc',"SELECT 1 FROM pg_database WHERE datname='varstore_recovery'"]).stdout.strip()
+if exists!='1': run(['docker','exec',container,'createdb','-U','varstore','varstore_recovery'])
 seed=run(harness('seed'))
 start=time.monotonic();run(['docker','kill','--signal=KILL',container]);run(['docker','start',container]);ready()
 verified=run(harness('verify'))
@@ -49,7 +54,9 @@ try:
     restore_start=time.monotonic()
     with backup.open('rb') as src:
         subprocess.run(['docker','exec','-i',container,'pg_restore','-U','varstore','-d','varstore_recovery','--clean','--if-exists','--exit-on-error'],stdin=src,check=True)
-    tool=root/'varstore-tools/build/libs/varstore-tools-1.0.0-SNAPSHOT.jar'
+    tools=[p for p in (root/'varstore-tools/build/libs').glob('*.jar') if not any(c in p.name for c in ('thin','sources','javadoc'))]
+    assert len(tools)==1, 'Build a clean tools distribution before recovery test'
+    tool=tools[0]
     toolenv=dict(env,VARSTORE_JDBC_URL=env['VARSTORE_TEST_JDBC_URL'],VARSTORE_DB_USER='varstore',VARSTORE_DB_PASSWORD='varstore-test',VARSTORE_TLS_MODE='disable',VARSTORE_WRITERS_STOPPED='true')
     subprocess.run([java,'-jar',str(tool),'rotate-epoch','faulttest'],env=toolenv,check=True,capture_output=True,text=True)
     p.stdin.write('restored and epoch rotated\n');p.stdin.flush()

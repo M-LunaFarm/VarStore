@@ -4,14 +4,14 @@
     "T03": {
       "passed": true,
       "fault": "SIGKILL actual PostgreSQL process/container",
-      "recovery_seconds": 3.783,
+      "recovery_seconds": 3.508,
       "verified": "acknowledged pre-crash STRING persisted"
     },
     "T18": {
       "passed": true,
-      "backup_bytes": 13669,
-      "recovery_seconds": 1.333,
-      "backup_age_at_restore_seconds": 0.029,
+      "backup_bytes": 13955,
+      "recovery_seconds": 1.427,
+      "backup_age_at_restore_seconds": 0.027,
       "verified": [
         "value and original operation restored together",
         "post-backup operation removed together",
@@ -21,5 +21,5 @@
     }
   },
   "status": "PASS",
-  "recordedAt": "2026-09-15T12:10:30Z"
+  "recordedAt": "2026-09-15T12:38:37Z"
 }

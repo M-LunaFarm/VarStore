@@ -61,8 +61,10 @@ public final class VarStoreBench extends JavaPlugin {
             }
             await(data.setIfAbsent(VarKey.longKey("hot"),0L,UUID.nameUUIDFromBytes("varstorebench-hot-v1".getBytes(StandardCharsets.UTF_8))));
             await(data.setIfAbsent(VarKey.stringKey("large"),"x".repeat(16_384),UUID.nameUUIDFromBytes("varstorebench-large-v1".getBytes(StandardCharsets.UTF_8))));
-            var builder=TransactionPlan.builder();for(int i=0;i<16;i++)builder.set(data.target(VarKey.stringKey("txn/"+i)),"x".repeat(1024));
-            await(store.namespace("varstorebench").execute(builder.build(),UUID.nameUUIDFromBytes("varstorebench-txn-v1".getBytes(StandardCharsets.UTF_8))));
+            for(int node=0;node<3;node++) {
+                var builder=TransactionPlan.builder();for(int i=0;i<16;i++)builder.set(data.target(VarKey.stringKey("txn/"+node+"/"+i)),"x".repeat(1024));
+                await(store.namespace("varstorebench").execute(builder.build(),UUID.nameUUIDFromBytes(("varstorebench-txn-v2/"+node).getBytes(StandardCharsets.UTF_8))));
+            }
             getLogger().info("VARSTORE_BENCH_SEEDED keys="+KEY_COUNT+" elapsedMillis="+TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-begin));
         }catch(Throwable failure){getLogger().severe("VARSTORE_BENCH_SEED_FAILED "+failure.getClass().getSimpleName());}
         finally{running=false;}
@@ -93,8 +95,8 @@ public final class VarStoreBench extends JavaPlugin {
                 case "large"->{var key=VarKey.stringKey("large");yield write?data.set(key,payload,UUID.randomUUID()):data.get(key);}
                 case "hot"->{var key=VarKey.longKey("hot");yield write?data.increment(key,1,UUID.randomUUID()):data.get(key);}
                 case "transaction"->{
-                    if(write)yield store.namespace("varstorebench").execute(transaction(payload),UUID.randomUUID());
-                    List<VarKey<?>> keys=new ArrayList<>();for(int i=0;i<16;i++)keys.add(VarKey.stringKey("txn/"+i));yield data.getAll(keys);
+                    if(write)yield store.namespace("varstorebench").execute(transaction(payload,run.index),UUID.randomUUID());
+                    List<VarKey<?>> keys=new ArrayList<>();for(int i=0;i<16;i++)keys.add(VarKey.stringKey("txn/"+run.index+"/"+i));yield data.getAll(keys);
                 }
                 default->throw new IllegalStateException();
             };
@@ -120,7 +122,8 @@ public final class VarStoreBench extends JavaPlugin {
             report.put("submissionP50Micros",percentile(run.samples.stream().mapToLong(s->s.submission).toArray(),.5)/1000.0);report.put("submissionP95Micros",percentile(run.samples.stream().mapToLong(s->s.submission).toArray(),.95)/1000.0);report.put("submissionP99Micros",percentile(run.samples.stream().mapToLong(s->s.submission).toArray(),.99)/1000.0);
             report.put("tickIntervalP95Millis",percentile(run.tickIntervals.stream().mapToLong(Long::longValue).toArray(),.95)/1e6);report.put("tickIntervalP99Millis",percentile(run.tickIntervals.stream().mapToLong(Long::longValue).toArray(),.99)/1e6);
             report.put("reads",summary(run.samples.stream().filter(s->!s.write).toList()));report.put("writes",summary(run.samples.stream().filter(s->s.write).toList()));
-            report.put("transactionKeys",run.phase.equals("transaction")?16:1);report.put("transactionEstimatedBytes",run.phase.equals("transaction")?transaction("x".repeat(run.transactionValueBytes)).estimatedBytes():0);
+            report.put("transactionTargetSharing","each server has a distinct group of 16 transaction keys; hot phase shares one global LONG key");
+            report.put("transactionKeys",run.phase.equals("transaction")?16:1);report.put("transactionEstimatedBytes",run.phase.equals("transaction")?transaction("x".repeat(run.transactionValueBytes),run.index).estimatedBytes():0);
             Path directory=getDataFolder().toPath();Files.createDirectories(directory);String prefix="bench-"+run.index+"-"+run.phase+"-"+System.currentTimeMillis();
             Files.writeString(directory.resolve(prefix+".json"),json(report)+"\n");
             try(var out=Files.newBufferedWriter(directory.resolve(prefix+".csv"))){out.write("sequence,operation,main_thread,submission_us,latency_us,error\n");for(Sample s:run.samples)out.write(s.sequence+","+(s.write?"write":"read")+","+s.mainThread+","+s.submission/1000.0+","+s.latency/1000.0+","+s.error+"\n");}
@@ -128,7 +131,7 @@ public final class VarStoreBench extends JavaPlugin {
         }catch(Throwable failure){getLogger().severe("VARSTORE_BENCH_REPORT_FAILED "+failure.getClass().getSimpleName());}
         finally{running=false;}
     }
-    private TransactionPlan transaction(String value){var builder=TransactionPlan.builder();for(int i=0;i<16;i++)builder.set(data.target(VarKey.stringKey("txn/"+i)),value);return builder.build();}
+    private TransactionPlan transaction(String value,int serverIndex){var builder=TransactionPlan.builder();for(int i=0;i<16;i++)builder.set(data.target(VarKey.stringKey("txn/"+serverIndex+"/"+i)),value);return builder.build();}
     private static String payload(int sequence,int size){SplittableRandom random=new SplittableRandom(sequence);char[] text=new char[size];String alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";for(int i=0;i<size;i++)text[i]=alphabet.charAt(random.nextInt(alphabet.length()));return new String(text);}
     private Map<String,Object> summary(List<Sample> samples){
         long[] times=samples.stream().filter(s->s.error.isEmpty()).mapToLong(s->s.latency).toArray();Map<String,Long> errors=new TreeMap<>();for(Sample sample:samples)if(!sample.error.isEmpty())errors.merge(sample.error,1L,Long::sum);
@@ -137,7 +140,7 @@ public final class VarStoreBench extends JavaPlugin {
     private final class Run {
         final int seconds,index,transactionValueBytes;final String phase;final List<Sample> samples=new ArrayList<>();final List<Long> tickIntervals=new ArrayList<>();final AtomicInteger outstanding=new AtomicInteger();
         int tick;long start,previousTick;String startedAt;
-        Run(int seconds,int index,String phase){this.seconds=seconds;this.index=index;this.phase=phase;transactionValueBytes=(int)((65_536-transaction("").estimatedBytes())/16);}
+        Run(int seconds,int index,String phase){this.seconds=seconds;this.index=index;this.phase=phase;transactionValueBytes=(int)((65_536-transaction("",index).estimatedBytes())/16);}
     }
     private static final class Sample {final int sequence;final boolean write,mainThread;volatile long submission,latency;volatile String error="";Sample(int sequence,boolean write,boolean mainThread){this.sequence=sequence;this.write=write;this.mainThread=mainThread;}}
     private static <T>T await(CompletionStage<T> stage)throws Exception{return stage.toCompletableFuture().get(30,TimeUnit.SECONDS);}

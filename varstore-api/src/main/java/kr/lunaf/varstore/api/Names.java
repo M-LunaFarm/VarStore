@@ -8,7 +8,26 @@ public final class Names {
     public static String identifier(String value, String field) { return match(value, "[a-z0-9._-]+", 64, field); }
     public static String key(String value) { return match(value, "[a-z0-9._/-]+", 128, "key"); }
     public static String ownerType(String value) { return match(value, "[A-Z][A-Z0-9_]*", 32, "owner type"); }
-    public static String ownerId(String value) { return match(value, "[a-zA-Z0-9._-]+", 128, "owner ID"); }
+    /** Explicit IDs preserve their original Unicode spelling and compare by UTF-8 bytes. */
+    public static String ownerId(String value) {
+        if (value == null || value.isEmpty() || value.length() > 128) throw invalidOwnerId();
+        for (int index = 0; index < value.length(); index++) {
+            char unit = value.charAt(index);
+            int codePoint = unit;
+            if (Character.isHighSurrogate(unit)) {
+                if (++index >= value.length() || !Character.isLowSurrogate(value.charAt(index))) throw invalidOwnerId();
+                codePoint = Character.toCodePoint(unit, value.charAt(index));
+            } else if (Character.isLowSurrogate(unit)) throw invalidOwnerId();
+            if (Character.isISOControl(codePoint) || Character.getType(codePoint) == Character.FORMAT
+                    || Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint)
+                    || codePoint == '/' || codePoint == '\\' || codePoint == ':') throw invalidOwnerId();
+        }
+        if (utf8Bytes(value) > 128) throw invalidOwnerId();
+        return value;
+    }
+    private static VarStoreException invalidOwnerId() {
+        return new VarStoreException(ErrorCode.INVALID_ARGUMENT, "Invalid owner ID");
+    }
     private static String match(String value, String regex, int max, String field) {
         if (value == null || value.length() > max || !value.matches(regex))
             throw new VarStoreException(ErrorCode.INVALID_ARGUMENT, "Invalid " + field);
