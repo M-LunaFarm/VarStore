@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kr.lunaf.varstore.core.PostgresContractTest" tests="12" skipped="0" failures="1" errors="0" timestamp="2026-09-16T12:05:23" hostname="vmi2726394" time="28.169">
+  <properties/>
+  <testcase name="callbacksReleaseConnectionAndUseSeparateExecutor()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.345"/>
+  <testcase name="completeReusableContracts()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="23.566">
+    <failure message="kr.lunaf.varstore.api.VarStoreException: Database operation failed (SQLSTATE 55P03)" type="kr.lunaf.varstore.api.VarStoreException">kr.lunaf.varstore.api.VarStoreException: Database operation failed (SQLSTATE 55P03)
+	at app//kr.lunaf.varstore.postgres.PostgresBackend.transactionOnce(PostgresBackend.java:348)
+	at app//kr.lunaf.varstore.postgres.PostgresBackend.transaction(PostgresBackend.java:326)
+	at app//kr.lunaf.varstore.postgres.PostgresBackend.execute(PostgresBackend.java:134)
+	at app//kr.lunaf.varstore.postgres.PostgresBackend.write(PostgresBackend.java:122)
+	at app//kr.lunaf.varstore.core.AsyncVarStore$DataHandle.lambda$write$6(AsyncVarStore.java:292)
+	at app//kr.lunaf.varstore.core.AsyncVarStore$Request.run(AsyncVarStore.java:212)
+	at java.base@21.0.12/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base@21.0.12/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base@21.0.12/java.lang.Thread.run(Thread.java:1583)
+</failure>
+  </testcase>
+  <testcase name="blockedCallbacksDoNotStarveOtherFuturesAndDeliveryCapacityStaysBounded()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.447"/>
+  <testcase name="byteAdmissionAndNamespaceAreCheckedBeforeStorage()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.441"/>
+  <testcase name="expiredOperationNeverReappliesAndOldEpochIsFenced()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.532"/>
+  <testcase name="shutdownDistinguishesQueuedFromUnconfirmedWrite()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.376"/>
+  <testcase name="adminVersionConflictAndAuditCommitTogether()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.537"/>
+  <testcase name="composedRequestsWorkWithSingleRequestAdmission()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.342"/>
+  <testcase name="primitiveValuesSurviveProviderRestartAndServerScopeIsSeparate()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.647"/>
+  <testcase name="invalidWritesReportOperationIdAndBoundsBeforeIo()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.207"/>
+  <testcase name="concurrentMigrationIsSerializedAndIdempotent()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.289"/>
+  <testcase name="boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite()" classname="kr.lunaf.varstore.core.PostgresContractTest" time="0.42"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

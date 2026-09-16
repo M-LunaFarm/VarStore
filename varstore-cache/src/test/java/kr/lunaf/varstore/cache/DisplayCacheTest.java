@@ -3,6 +3,7 @@ package kr.lunaf.varstore.cache;
 import kr.lunaf.varstore.api.*;
 import kr.lunaf.varstore.api.events.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
 import java.lang.reflect.Proxy;
 import java.time.*;
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.function.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DisplayCacheTest {
+    @BeforeAll static void initializeIdsOffGameThread() { RuntimeIds.initialize(); }
     static final Duration AGE = Duration.ofSeconds(1);
     static final VarKey<Long> KEY = VarKey.longKey("points");
     static final KeyDefinition<Long> DEFINITION = definition(KEY);

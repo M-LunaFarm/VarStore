@@ -13,6 +13,8 @@ import org.bukkit.plugin.Plugin;
 /** Consumer-owned connection generations and scheduler-safe completion delivery. */
 public final class PaperSessions implements Listener, AutoCloseable {
     public record Session(UUID playerId, UUID generation) { }
+    private static final java.util.concurrent.atomic.AtomicLong GENERATIONS = new java.util.concurrent.atomic.AtomicLong();
+    static UUID nextGeneration() { return new UUID(0, GENERATIONS.incrementAndGet()); }
     private final Plugin owner;
     private final Map<UUID, Session> sessions = new HashMap<>();
     private final Set<org.bukkit.scheduler.BukkitTask> tasks = new HashSet<>();
@@ -25,7 +27,7 @@ public final class PaperSessions implements Listener, AutoCloseable {
         owner.getServer().getPluginManager().registerEvents(this, owner);
         owner.getServer().getOnlinePlayers().forEach(p -> joined(p.getUniqueId()));
     }
-    private void joined(UUID id) { sessions.put(id, new Session(id, UUID.randomUUID())); }
+    private void joined(UUID id) { sessions.put(id, new Session(id, nextGeneration())); }
     @EventHandler(priority = EventPriority.LOWEST) public void joined(PlayerJoinEvent event) { joined(event.getPlayer().getUniqueId()); }
     @EventHandler(priority = EventPriority.MONITOR) public void left(PlayerQuitEvent event) { sessions.remove(event.getPlayer().getUniqueId()); }
     @EventHandler public void disabled(PluginDisableEvent event) { if (event.getPlugin() == owner) close(); }

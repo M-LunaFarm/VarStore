@@ -1,0 +1,5 @@
+network_id,namespace,scope_kind,scope_id,owner_type,owner_id,key,type,value
+production,migration,NETWORK,_,PLAYER,123E4567-E89B-12D3-A456-426614174000,profile/name,STRING,"Example, Player"
+production,migration,NETWORK,_,PLAYER,123e4567-e89b-12d3-a456-426614174000,profile/level,LONG,12
+production,migration,SERVER,survival-1,SYSTEM,global,settings/enabled,BOOLEAN,true
+production,migration,NETWORK,_,SYSTEM,global,settings/owner,UUID,123E4567-E89B-12D3-A456-426614174000

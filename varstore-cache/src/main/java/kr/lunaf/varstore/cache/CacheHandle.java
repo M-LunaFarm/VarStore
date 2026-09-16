@@ -37,7 +37,7 @@ public final class CacheHandle implements AutoCloseable {
             else if (state != StoreState.READY) { active = false; invalidateAll(); }
             else resync();
         }));
-        var spec = new SubscriptionSpec("cache-" + UUID.randomUUID(), namespace, SubscriptionMode.EPHEMERAL,
+        var spec = new SubscriptionSpec("cache-" + RuntimeIds.random(), namespace, SubscriptionMode.EPHEMERAL,
                 Duration.ofMinutes(1), Duration.ofHours(1));
         extensions.events().subscribe(spec, event -> {
             UUID expected = epoch;

@@ -23,6 +23,8 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, UUID> sessions = new ConcurrentHashMap<>();
     private final Map<UUID, PaperSessions.Session> pendingConnections = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> visible = new ConcurrentHashMap<>();
+    private long requestSequence;
+    private UUID nextRequest() { return new UUID(0, ++requestSequence); }
     private PaperSessions connections;
     private TrackedWrites writes;
     private VarStore store;
@@ -49,7 +51,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         event.viewers().removeIf(viewer -> viewer instanceof Player player && !visible.getOrDefault(player.getUniqueId(), false));
     }
     private void load(UUID id) {
-        UUID session = UUID.randomUUID(); sessions.put(id, session); pendingConnections.put(session, connections.capture(id));
+        UUID session = nextRequest(); sessions.put(id, session); pendingConnections.put(session, connections.capture(id));
         store.ready().thenCompose(unused -> namespace.network().player(id).getOrDefault(CHAT, true))
                 .whenComplete((value, error) -> online(id, session, player -> {
                     if (error != null) { player.sendMessage("Chat preference unavailable. Use /preferences to retry."); return; }
@@ -59,6 +61,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     }
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) { sender.sendMessage("This command requires a player."); return true; }
+        if (store.state() != StoreState.READY) { player.sendMessage("Storage not ready; preference and transfer requests are paused."); return true; }
         if (args.length == 2 && args[0].equals("transfer") && args[1].matches("[a-zA-Z0-9_-]{1,64}")) {
             PaperSessions.Session session = connections.capture(player.getUniqueId());
             String destination = args[1];
@@ -75,7 +78,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         }
         if (args.length > 1 || (args.length == 1 && !java.util.Set.of("on", "off", "toggle").contains(args[0]))) return false;
         UUID id = player.getUniqueId();
-        UUID session = UUID.randomUUID();
+        UUID session = nextRequest();
         sessions.put(id, session); pendingConnections.put(session, connections.capture(id));
         VarStore.Data data = namespace.network().player(id);
         if (args.length == 0) {
@@ -86,7 +89,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
             return true;
         }
         String choice = args[0];
-        UUID operation = UUID.randomUUID();
+        UUID operation = RuntimeIds.random();
         writes.submit(connections.capture(id), () -> data.getVersioned(CHAT).thenCompose(before -> {
             boolean value = choice.equals("toggle") ? !before.map(VersionedValue::value).orElse(true) : choice.equals("on");
             return before.isPresent() ? data.compareAndSet(CHAT, before.get().version(), value, operation)

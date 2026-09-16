@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "totalTests": 106,
+  "totalTests": 111,
   "suites": [
     {
       "suite": "kr.lunaf.varstore.api.ApiContractTest",
@@ -8,7 +8,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.442,
+      "seconds": 0.315,
       "cases": [
         "explicitOwnerIdsSupportUnicodeWithinEncodedByteLimit()",
         "planRejectsTypeAmbiguityAndOversizedAggregate()",
@@ -20,12 +20,26 @@
       ]
     },
     {
+      "suite": "kr.lunaf.varstore.api.RuntimeIdsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.351,
+      "cases": [
+        "warmedGameplayGenerationPerformsNoRecordedFileOrSocketIo()",
+        "exhaustedCounterFailsClosedWithoutReseedingOrWrapping()",
+        "uninitializedCallerFailsWithoutAcquiringTheEntropyInitializationLock()",
+        "concurrentCallersGetDistinctV4IdsAndRepeatedInitializationDoesNotResetTheSecretOrCounter()"
+      ]
+    },
+    {
       "suite": "kr.lunaf.varstore.cache.DisplayCacheTest",
       "tests": 12,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.408,
+      "seconds": 0.293,
       "cases": [
         "subscriptionActivationPrecedesLoadAndCloseReleasesListenersWithoutRepopulating()",
         "invalidationDuringLoadDiscardsOldSnapshotAndReverseEventsNeverInstallValues()",
@@ -47,7 +61,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.546,
+      "seconds": 0.458,
       "cases": [
         "malformedPayloadIsDecodeErrorAndPrimaryFailuresNeverBecomeAbsent()",
         "codecIdentityAndUnsupportedVersionsFailExplicitlyAndLegacySupportIsOptIn()",
@@ -67,7 +81,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 1.268,
+      "seconds": 0.284,
       "cases": [
         "closeDuringExpiredResetCannotReactivateSubscription()"
       ]
@@ -78,7 +92,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 4.583,
+      "seconds": 4.828,
       "cases": [
         "failedConsumerRetriesAndAcknowledgesOnlyAfterCompletion()",
         "remoteCacheInvalidationExpiryResyncAndEpochFence()",
@@ -91,7 +105,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.255,
+      "seconds": 0.186,
       "cases": [
         "boundedRegistryReturnsImmutableOrderedSnapshotsAndCloseClearsDefinitions()",
         "sameNamespaceConflictIncludesMetadataAndDoesNotAffectOtherNamespaces()",
@@ -105,7 +119,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.37,
+      "seconds": 0.256,
       "cases": [
         "unknownThenNotObservedResendsExactlySamePlanAndOperationId()",
         "expiredResultIsExplicitAndNeverReplayedWithANewOperationId()",
@@ -124,7 +138,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 32.794,
+      "seconds": 39.855,
       "cases": [
         "callbacksReleaseConnectionAndUseSeparateExecutor()",
         "completeReusableContracts()",
@@ -146,7 +160,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.173,
+      "seconds": 0.259,
       "cases": [
         "deleteRetainsExactPreviewVersionAndActor()",
         "invalidValueCannotReachConfirmation()",
@@ -159,7 +173,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.035,
+      "seconds": 0.052,
       "cases": [
         "expiryRejectsConfirmationAtDeadline()",
         "confirmationsBindActorAndPayloadAndAreConsumedOnce()"
@@ -171,7 +185,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.142,
+      "seconds": 0.073,
       "cases": [
         "closeCancelsScheduledCompletionAndOwnedResources()",
         "completionAfterReconnectCannotReachNewPlayerSession()",
@@ -184,7 +198,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.106,
+      "seconds": 0.04,
       "cases": [
         "freezeWaitsOnlyForSubmittedWorkAndRejectsNewWork()",
         "completedFailureIsRetainedAndCannotBecomeSuccessfulDrain()",
@@ -197,23 +211,24 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 2.664,
+      "seconds": 2.905,
       "cases": [
         "actualDeadlockRollsBackThenRetriesOriginalOperationExactlyOnce()"
       ]
     },
     {
       "suite": "kr.lunaf.varstore.postgres.ExtensionContractTest",
-      "tests": 11,
+      "tests": 12,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 8.583,
+      "seconds": 11.285,
       "cases": [
         "migrationPreservesV1DataReceiptAndImmutableHistory()",
         "registeringSubscriptionWaitsForExistingWriterBoundary()",
         "sequenceMetadataIsValidatedButAdvancingSequenceValuesRemainValid()",
         "durableOfflineDeliveryAndEphemeralCollectionAreExplicit()",
+        "restartingAtAttemptLimitCannotBypassDeadLetterCeiling()",
         "rollbackRemovesVariableMutationAndOutboxTogether()",
         "failedUpgradeRollsBackAndHistoryTamperingFailsClosed()",
         "retentionPreservesDurableWindowThenMarksResyncBeforePruning()",
@@ -229,7 +244,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 36.415,
+      "seconds": 41.043,
       "cases": [
         "hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected()",
         "separateNetworkEpochFencesOldSessions()",
@@ -268,7 +283,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.682,
+      "seconds": 0.98,
       "cases": [
         "documentedRuntimeGrantsSupportStorageAndAuditButRejectDdlAndNetworkProvisioning()"
       ]
@@ -279,7 +294,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.53,
+      "seconds": 0.637,
       "cases": [
         "optionalExistingAddressProbeReportsTypeConflictsWithoutOverwriting()",
         "detectsCollisionsAndRejectsAmbiguousOrInvalidTypesAndScopes()",
@@ -289,6 +304,6 @@
       ]
     }
   ],
-  "recordedAt": "2026-09-16T11:47:57.332109+00:00",
-  "sourceTreeSha256": "5de305255e289896bd5aa9638b2e1631871ca75b22c46ff7fc953e091e4c8d58"
+  "recordedAt": "2026-09-16T12:10:11.581347+00:00",
+  "sourceTreeSha256": "ca9ee16d5c161df7fbc53f37e21a24bc877a046157b2e4b0d51e6f3f30fb6cb8"
 }

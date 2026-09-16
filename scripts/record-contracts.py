@@ -19,7 +19,7 @@ required = {'kr.lunaf.varstore.api.ApiContractTest', 'kr.lunaf.varstore.core.Pos
             'kr.lunaf.varstore.postgres.DeadlockRetryTest',
             'kr.lunaf.varstore.postgres.PostgresSettingsTest', 'kr.lunaf.varstore.paper.AdminPlanTest',
             'kr.lunaf.varstore.paper.ConfirmationTokensTest',
-            'kr.lunaf.varstore.core.ExtensionIntegrationTest', 'kr.lunaf.varstore.core.EventHubLifecycleTest', 'kr.lunaf.varstore.core.LocalKeyRegistryTest',
+            'kr.lunaf.varstore.api.RuntimeIdsTest', 'kr.lunaf.varstore.core.ExtensionIntegrationTest', 'kr.lunaf.varstore.core.EventHubLifecycleTest', 'kr.lunaf.varstore.core.LocalKeyRegistryTest',
             'kr.lunaf.varstore.core.PendingWriteManagerTest', 'kr.lunaf.varstore.postgres.ExtensionContractTest',
             'kr.lunaf.varstore.cache.DisplayCacheTest', 'kr.lunaf.varstore.codec.CodecAdapterTest',
             'kr.lunaf.varstore.tools.CsvDryRunTest', 'kr.lunaf.varstore.paper.PaperSessionsTest',

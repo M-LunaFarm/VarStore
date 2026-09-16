@@ -156,8 +156,8 @@ var initialized = data.setIfAbsent(level, 0L, persistedInitializationId);
 initialized.thenCompose(r -> data.increment(level, 1L, eventId));
 
 data.getVersioned(level).thenCompose(current -> {
-    if (current.isEmpty()) return data.setIfAbsent(level, 1L, UUID.randomUUID());
-    return data.compareAndSet(level, current.get().version(), 20L, UUID.randomUUID());
+    if (current.isEmpty()) return data.setIfAbsent(level, 1L, RuntimeIds.random());
+    return data.compareAndSet(level, current.get().version(), 20L, RuntimeIds.random());
 });
 
 var balanceKey = VarKey.longKey("balance");
@@ -178,6 +178,8 @@ data.setIfAbsent(balanceKey, 0L, persistedBalanceInitializationId)
 콜백은 게임 메인 스레드에서 실행된다고 가정하지 않습니다. DB 연결과 잠금을 반환한 뒤 별도 완료 실행기에 전달합니다. 이미 완료된 Future에 붙인 콜백은 붙인 스레드에서 실행될 수 있습니다. `join()`·`get()`으로 게임 스레드를 막지 않습니다. 독립 제출의 순서는 보장하지 않으므로 필요한 순서는 `thenCompose`로 연결합니다.
 
 대기열은 개수·바이트 모두 제한하며 결과 전달을 기다리는 요청도 한도에 포함합니다. 접수한 각 요청은 별도 가상 스레드에서 결과를 전달하므로 느린 소비 콜백이 다른 접수 요청의 완료를 막지 않습니다. 실행 중 콜백까지 보유하는 전달 슬롯은 대기열 개수 한도 + 2, 요청 페이로드 합계는 대기열 바이트 한도 + 128KiB로 제한합니다. OVERLOADED는 접수 거절이며 저장 성공이 아닙니다. 소비 콜백을 장시간 막으면 후속 요청도 역압을 받습니다. 취소된 Future는 DB 변경 취소의 증거가 아닙니다.
+
+코어는 READY 전에 백그라운드에서 `RuntimeIds`의 난수 시드를 준비합니다. 이후 자동 작업 ID·확인 토큰은 메모리 안의 HMAC 카운터로 생성하므로 게임 스레드에서 난수 장치를 읽지 않습니다. 직접 ID가 필요한 예제에서는 READY 이후 `RuntimeIds.random()`을 사용합니다. 재시도에는 생성한 ID를 보존하세요. 다른 저장 제공자를 구현한다면 `RuntimeIds.initialize()`를 자체 백그라운드 초기화에서 호출해야 합니다.
 
 ## 확장 API: 정의·목록·불명확 결과 복구
 
@@ -373,6 +375,8 @@ scalar 4타입 read/set/delete, 원자적 LONG add, 제한된 prefix keys를 제
 
 결과 local list는 `status/value/error/operation/cursor/keys::*`를 구분합니다. 읽기는 VALUE/ABSENT/FAILED, 쓰기는 APPLIED/NO_CHANGE/CONDITION_FAILED/FAILED이며 실패를 미설정으로 바꾸지 않습니다. 저장 후 continuation은 비동기 완료를 기다렸다가 메인 스레드에서 재개하고 오래된 플레이어 세션·unload된 스크립트에서는 중단합니다. 이미 지나간 이벤트를 continuation에서 취소할 수 없습니다. 이벤트 취소·잔액 승인처럼 즉시 결정이 필요한 로직은 따로 설계해야 합니다.
 
+`FAILED`는 비동기 결과를 확인하지 못했다는 뜻이며 DB 롤백의 증거가 아닙니다. 특히 `UNKNOWN_COMMIT_OUTCOME`이면 원래 `operation`과 동일한 요청을 보존해 확인·재전송하고 새 ID로 바꾸지 마세요.
+
 ## 상태와 서버 이동
 
 STARTING → READY, 장애 시 DEGRADED, 종료 시 DRAINING → CLOSED입니다. `ready()`는 최초 준비만 알려줍니다. 이후 상태는 `onStateChange` 또는 Paper의 `VarStoreStateEvent`로 감시합니다. 느린 소비자가 있는 경우 상태 통지는 최신 상태로 합쳐질 수 있으므로 `state()`가 현재 상태의 기준입니다.
@@ -449,7 +453,7 @@ java -jar varstore-tools/build/libs/varstore-tools-1.3.0.jar import-dry-run expo
 java -jar varstore-tools/build/libs/varstore-tools-1.3.0.jar import-dry-run export.csv --check-database
 ```
 
-UTF-8 CSV의 정확한 헤더는 다음과 같습니다. 최대 8MiB·10,000행이며 scalar 4타입만 지원합니다.
+[실행 가능한 CSV 샘플](scripts/fixtures/import-example.csv)을 제공합니다. UTF-8 CSV의 정확한 헤더는 다음과 같습니다. 최대 8MiB·10,000행이며 scalar 4타입만 지원합니다.
 
 ```csv
 network_id,namespace,scope_kind,scope_id,owner_type,owner_id,key,type,value
@@ -476,7 +480,7 @@ pg_restore --exit-on-error --dbname=varstore_restored varstore.dump
 
 더 짧은 RPO에는 base backup과 WAL 보관을 통한 PITR 또는 관리형 백업을 별도로 구성합니다. pg_dump에 WAL 파일을 붙이는 것은 PITR 구성이 아닙니다. 외부 백업 보관·마지막 백업 성공·디스크 여유·WAL 보관 실패·복구 실측 RPO/RTO를 운영 환경에서 점검하세요.
 
-스키마 버전 2는 V001과 V002의 이력·도구가 만든 테이블·제약·인덱스를 기준으로 검증하며 사용자 트리거·재작성 규칙·행 보안 정책은 허용하지 않습니다. 운영 테이블을 수동 확장하지 않습니다.
+스키마 버전 2는 V001과 V002의 이력·도구가 만든 테이블·제약·인덱스·시퀀스 설정을 기준으로 검증하며 사용자 트리거·재작성 규칙·행 보안 정책은 허용하지 않습니다. 운영 테이블을 수동 확장하지 않습니다.
 
 변수 하나를 반복 수정해도 작업 표식은 계속 늘어납니다. 초당 쓰기 10건이면 하루 864,000개 표식입니다. `diagnostics`와 부하 시험 결과로 테이블·인덱스·WAL·백업 비용을 산정하세요. 매 틱 좌표 저장이나 스코어보드 최신값 조회 용도는 권장하지 않습니다.
 
@@ -497,11 +501,11 @@ Folia, Velocity, 다른 Minecraft 버전과 DB 제품은 이 조합의 지원 �
 
 | 검증 | 결과 및 근거 |
 | --- | --- |
-| 자동 계약·경계·권한·교착 재시도 | 45개 통과, 실패·건너뜀 0: [`contracts.json`](verification/contracts.json) |
-| 커밋 응답 차단 | 실제 COMMIT 응답을 버린 뒤 동일 ID로 원 결과 확인, 값 1 유지: [`commit-response.json`](verification/commit-response.json) |
-| Paper 기능·스레드 | 재시작·이동·두 소비 플러그인·관리자 CAS, 별도 JFR 관측 구간에서 메인 스레드 JDBC I/O 0건: [`paper-smoke.json`](verification/paper-smoke.json), [`paper-io-probe.json`](verification/paper-io-probe.json) |
-| DB 강제 종료·백업 복원 | 성공한 값 복구, 작업 기록 동시 복원, 이전 epoch 거절: [`recovery.json`](verification/recovery.json) |
-| 반복 장애 | 180.571초 동안 10회 중단·재연결, 고유 작업 3,277개와 최종 증가값 일치: [`outage.json`](verification/outage.json) |
+| 자동 계약·경계·권한·교착 재시도 | 45개 통과, 실패·건너뜀 0: [`contracts.json`](verification/v1.0.0/contracts.json) |
+| 커밋 응답 차단 | 실제 COMMIT 응답을 버린 뒤 동일 ID로 원 결과 확인, 값 1 유지: [`commit-response.json`](verification/v1.0.0/commit-response.json) |
+| Paper 기능·스레드 | 재시작·이동·두 소비 플러그인·관리자 CAS, 별도 JFR 관측 구간에서 메인 스레드 JDBC I/O 0건: [`paper-smoke.json`](verification/v1.0.0/paper-smoke.json), [`paper-io-probe.json`](verification/v1.0.0/paper-io-probe.json) |
+| DB 강제 종료·백업 복원 | 성공한 값 복구, 작업 기록 동시 복원, 이전 epoch 거절: [`recovery.json`](verification/v1.0.0/recovery.json) |
+| 반복 장애 | 180.571초 동안 10회 중단·재연결, 고유 작업 3,277개와 최종 증가값 일치: [`outage.json`](verification/v1.0.0/outage.json) |
 
 반복 장애 시험에는 실제 UNKNOWN_COMMIT_OUTCOME 1건이 포함되며 같은 ID로 복구했습니다. 종료 후 연결·대기 요청·전달 슬롯·보유 요청 바이트·VarStore 플랫폼 스레드는 모두 0입니다. 유한한 관측 구간에서 확인한 결과이며 장기 누수 부재나 운영 RPO/RTO 보장은 아닙니다. 복구 연습의 DB 재시작은 3.508초, 백업 복원·epoch 전환은 1.427초였으며 작은 로컬 시험 DB에서 측정했습니다.
 

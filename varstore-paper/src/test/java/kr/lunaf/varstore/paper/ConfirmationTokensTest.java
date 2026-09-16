@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 
 class ConfirmationTokensTest {
+    @org.junit.jupiter.api.BeforeAll static void initializeIds() { kr.lunaf.varstore.api.RuntimeIds.initialize(); }
     @Test void confirmationsBindActorAndPayloadAndAreConsumedOnce() {
         var tokens = new ConfirmationTokens<String>(Clock.systemUTC(), Duration.ofSeconds(60));
         String token = tokens.issue("console", "set key value expected-version");

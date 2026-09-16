@@ -59,8 +59,12 @@ public interface VarStore extends AutoCloseable {
         }
         CompletionStage<BatchRead> getAll(Collection<VarKey<?>> keys);
         <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key, T value, UUID operationId);
+        /** Compatibility default for external providers; UUID.randomUUID may read OS
+         * entropy. The supplied core overrides this with preinitialized RuntimeIds.
+         * Game-thread providers should override it or accept an explicit operation ID. */
         default <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key, T value) { return set(key, value, UUID.randomUUID()); }
         CompletionStage<WriteReceipt<Void>> delete(VarKey<?> key, UUID operationId);
+        /** External-provider compatibility default; see set(key, value) entropy caveat. */
         default CompletionStage<WriteReceipt<Void>> delete(VarKey<?> key) { return delete(key, UUID.randomUUID()); }
         <T> CompletionStage<WriteReceipt<T>> setIfAbsent(VarKey<T> key, T value, UUID operationId);
         /** Fails with MISSING_VALUE if there is no living LONG value. */

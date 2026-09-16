@@ -19,7 +19,7 @@ final class ConfirmationTokens<T> {
     synchronized String issue(String actor, T payload) {
         tokens.entrySet().removeIf(e -> !e.getValue().expires().isAfter(clock.instant()));
         if (tokens.size() >= 256) throw new IllegalStateException("Too many pending confirmations");
-        String token = UUID.randomUUID().toString();
+        String token = kr.lunaf.varstore.api.RuntimeIds.random().toString();
         tokens.put(token, new Entry<>(actor, payload, clock.instant().plus(ttl)));
         return token;
     }

@@ -53,8 +53,9 @@ final class OutboxRepository {
   if(row.resync||retentionExpired(c,state.subscriberId(),row.retentionMillis,deadline)) {
    markResync(c,state.subscriberId(),deadline);return new Claimed(List.of(),true);
   }
-  // A repeatedly crashed delivery is retained as a visible dead letter, never dropped.
-  try(var statement=sql.prepare(c,"UPDATE vs_outbox_delivery SET state='DEAD',lease_token=NULL,lease_until=NULL,last_error='LEASE_EXHAUSTED' WHERE network_id=? AND subscriber_id=? AND state='LEASED' AND lease_until<=clock_timestamp() AND attempts>=100",deadline)){statement.setString(1,network);statement.setString(2,state.subscriberId());statement.executeUpdate();}
+  // Re-registration releases leases to PENDING without resetting attempts. Both
+  // released and expired deliveries must obey the same crash-retry ceiling.
+  try(var statement=sql.prepare(c,"UPDATE vs_outbox_delivery SET state='DEAD',lease_token=NULL,lease_until=NULL,last_error='LEASE_EXHAUSTED' WHERE network_id=? AND subscriber_id=? AND attempts>=100 AND (state='PENDING' OR (state='LEASED' AND lease_until<=clock_timestamp()))",deadline)){statement.setString(1,network);statement.setString(2,state.subscriberId());statement.executeUpdate();}
   List<Long> ids=new ArrayList<>();
   try(var statement=sql.prepare(c,"SELECT event_id FROM vs_outbox_delivery WHERE network_id=? AND subscriber_id=? AND ((state='PENDING' AND next_attempt_at<=clock_timestamp()) OR (state='LEASED' AND lease_until<=clock_timestamp())) ORDER BY next_attempt_at,event_id LIMIT ? FOR UPDATE SKIP LOCKED",deadline)) {
    statement.setString(1,network);statement.setString(2,state.subscriberId());statement.setInt(3,limit);try(var rows=statement.executeQuery()){while(rows.next())ids.add(rows.getLong(1));}

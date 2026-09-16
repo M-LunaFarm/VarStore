@@ -146,7 +146,7 @@ final class AdminCommand implements CommandExecutor, Listener {
             }
             try {
                 Target<T> target = data.target(key);
-                UUID operationId = UUID.randomUUID();
+                UUID operationId = RuntimeIds.random();
                 TransactionPlan plan = AdminPlan.create(reply.actor(), action, target, current.map(VersionedValue::version), value);
                 String token = confirmations.issue(reply.actor(), new Pending(namespace, plan, operationId));
                 sender.sendMessage("Preview: " + action + " " + data.address(key) + " expected=" + current.map(VersionedValue::version)
@@ -162,7 +162,7 @@ final class AdminCommand implements CommandExecutor, Listener {
     private Reply reply(CommandSender sender) {
         if (sender instanceof Player player) {
             UUID id = player.getUniqueId();
-            return new Reply(id, sessions.computeIfAbsent(id, unused -> UUID.randomUUID()), "player:" + id);
+            return new Reply(id, sessions.computeIfAbsent(id, unused -> PaperSessions.nextGeneration()), "player:" + id);
         }
         return new Reply(null, null, "console");
     }

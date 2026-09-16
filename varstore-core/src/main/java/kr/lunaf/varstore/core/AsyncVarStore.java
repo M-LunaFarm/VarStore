@@ -65,6 +65,7 @@ final class AsyncVarStore implements VarStore, VarStoreExtensions {
     private void probe() {
         if (state.get() == StoreState.DRAINING || state.get() == StoreState.CLOSED) return;
         try {
+            RuntimeIds.initialize(); // Seed and warm off the caller/game thread, before READY.
             synchronized (admission) {
                 if (closed.get()) return;
                 if (backend == null) backend = new PostgresBackend(config.storage(), config.maxAttempts());
@@ -292,9 +293,9 @@ final class AsyncVarStore implements VarStore, VarStoreExtensions {
             });
         }
         @Override public <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key,T value,UUID id) { return write(key,WriteKind.SET,value,0,null,id); }
-        @Override public <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key,T value) { return set(key,value,UUID.randomUUID()); }
+        @Override public <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key,T value) { return checked(null, () -> set(key,value,RuntimeIds.random())); }
         @Override public CompletionStage<WriteReceipt<Void>> delete(VarKey<?> key,UUID id) { return write(key,WriteKind.DELETE,null,0,null,id); }
-        @Override public CompletionStage<WriteReceipt<Void>> delete(VarKey<?> key) { return delete(key,UUID.randomUUID()); }
+        @Override public CompletionStage<WriteReceipt<Void>> delete(VarKey<?> key) { return checked(null, () -> delete(key,RuntimeIds.random())); }
         @Override public <T> CompletionStage<WriteReceipt<T>> setIfAbsent(VarKey<T> key,T value,UUID id) { return write(key,WriteKind.SET_IF_ABSENT,value,0,null,id); }
         @Override public CompletionStage<WriteReceipt<Long>> increment(VarKey<Long> key,long delta,UUID id) { return write(key,WriteKind.INCREMENT,null,delta,null,id); }
         @Override public <T> CompletionStage<WriteReceipt<T>> compareAndSet(VarKey<T> key,VersionToken version,T value,UUID id) { return checked(id,() -> {Objects.requireNonNull(version);return write(key,WriteKind.COMPARE_AND_SET,value,0,version,id);}); }

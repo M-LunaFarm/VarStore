@@ -95,6 +95,20 @@ class ExtensionContractTest {
   sql("UPDATE vs_outbox_delivery SET next_attempt_at=clock_timestamp()-interval '1 second'");assertEquals(2,claim(state).getFirst().attempt());
   var replacement=subscribe("worker");error(ErrorCode.SUBSCRIPTION_EXPIRED,()->claim(state));assertEquals(3,claim(replacement).getFirst().attempt());
  }
+ @Test void restartingAtAttemptLimitCannotBypassDeadLetterCeiling()throws Exception {
+  start();var original=subscribe("restarting");set("restart-limit",1);claim(original);
+  sql("UPDATE vs_outbox_delivery SET attempts=99,lease_until=clock_timestamp()-interval '1 second'");
+  var lastAttempt=claim(original).getFirst();assertEquals(100,lastAttempt.attempt());
+  assertTrue(claim(original).isEmpty());
+  try(var c=connection();var statement=c.createStatement();var result=statement.executeQuery("SELECT state FROM vs_outbox_delivery")){assertTrue(result.next());assertEquals("LEASED",result.getString(1));}
+  // A real registration simulates a restarted process taking over an unacknowledged lease.
+  var restarted=subscribe("restarting");
+  try(var c=connection();var statement=c.createStatement();var result=statement.executeQuery("SELECT state,attempts FROM vs_outbox_delivery")){assertTrue(result.next());assertEquals("PENDING",result.getString(1));assertEquals(100,result.getInt(2));}
+  assertTrue(claim(restarted).isEmpty());
+  try(var c=connection();var statement=c.createStatement();var result=statement.executeQuery("SELECT state,attempts,last_error,lease_token,lease_until FROM vs_outbox_delivery")){assertTrue(result.next());assertEquals("DEAD",result.getString(1));assertEquals(100,result.getInt(2));assertEquals("LEASE_EXHAUSTED",result.getString(3));assertNull(result.getObject(4));assertNull(result.getObject(5));}
+  var restartedAgain=subscribe("restarting");assertTrue(claim(restartedAgain).isEmpty());
+  assertEquals(1,backend.retryDeadLetters(restartedAgain,1,deadline()));assertEquals(1,claim(restartedAgain).getFirst().attempt());
+ }
  @Test void durableOfflineDeliveryAndEphemeralCollectionAreExplicit()throws Exception {
   start();var durable=subscribe("persistent");backend.closeSubscription(durable,deadline());set("offline",1);var resumed=subscribe("persistent");assertFalse(resumed.resyncRequired());assertEquals(1,claim(resumed).size());
   var spec=spec("cache",SubscriptionMode.EPHEMERAL);var cache=backend.registerSubscription(spec,deadline());set("online",2);backend.closeSubscription(cache,deadline());assertEquals(1,count("vs_subscriptions"));
