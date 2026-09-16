@@ -120,10 +120,19 @@ def held_row(namespace, key):
 def release(lock):
     lock.stdin.write('COMMIT;\n\\q\n'); lock.stdin.flush(); assert lock.wait(timeout=10) == 0
 
+def health_snapshot(servers):
+    result = {}
+    for name, server in servers.items():
+        tps = server.command('tps', 'TPS from')
+        start = len(server.lines); server.command('mspt', 'Server tick times'); time.sleep(.1)
+        result[name] = {'tps': tps, 'msptRawLines': server.lines[start:]}
+    return result
+
 def write(server, namespace, key, kind, value):
     line = server.command(f'varstore set {NETWORK} {namespace} NETWORK _ SYSTEM addon-test {key} {kind} {value}', 'Confirm within')
     return server.command('varstore confirm ' + re.search(r'confirm ([0-9a-f-]{36})', line).group(1), 'outcome=APPLIED')
 
+io_probe = None
 try:
     RUN.mkdir(parents=True); REPORT.parent.mkdir(exist_ok=True)
     for port in (25580, 25581, 25582):
@@ -137,6 +146,9 @@ try:
     servers = {name: start_paper(name) for name in ('a', 'b')}
     for server in servers.values(): server.wait('Successfully registered internal expansion: varstore', seconds=30)
     print(json.dumps({'event': 'extension-paper-ready', 'run': str(RUN), 'network': NETWORK}), flush=True)
+    report['healthBeforeGameplay'] = health_snapshot(servers)
+    io_probe = Process('io-probe', ['python3', str(ROOT / 'scripts/paper-io-probe.py'), str(RUN), '--servers', 'a,b', '--seconds', '300', '--stop-file', str(RUN / 'io-completed'), '--output', str(ROOT / 'verification/extension-io-probe.json')], ROOT)
+    io_probe.wait('io-probe-started', seconds=30)
     servers['a'].command('vstest', 'VS_SCALAR_LIST_PASS', seconds=60)
     assert not any('VS_TEST_FAILED' in line for line in servers['a'].lines)
     report['checks']['skript-scalars-list-errors'] = 'PASS: actual Skript continuation with STRING/LONG/BOOLEAN/UUID, atomic increment, two metadata pages, explicit network/server scope, ABSENT vs TYPE_MISMATCH failure'
@@ -170,6 +182,31 @@ try:
     placeholder(servers['a'], '%varstore_chat%', 'true')
     placeholder(servers['a'], '%varstore_forbidden%', '%varstore_forbidden%')
     report['checks']['placeholder-allowlist'] = 'PASS: configured chat display loads; unknown placeholder remains unexpanded'
+    if ENV.get('VARSTORE_TEST_MAIN_DB_OUTAGE') == 'true':
+        parsed = urllib.parse.urlsplit(ENV['VARSTORE_JDBC_URL'].removeprefix('jdbc:'))
+        assert parsed.hostname == '127.0.0.1' and parsed.port == 25432 and DB_NAME == 'varstore_extensions'
+        container = json.loads(subprocess.check_output(['docker', 'inspect', 'varstore-postgres'], text=True))[0]
+        assert container['Name'] == '/varstore-postgres' and container['Config']['Image'] == 'postgres:18'
+        assert container['HostConfig']['PortBindings'] == {'5432/tcp': [{'HostIp': '127.0.0.1', 'HostPort': '25432'}]}
+        assert container['State']['Running'] is True
+        try:
+            subprocess.run(['docker', 'stop', '-t', '1', 'varstore-postgres'], check=True, capture_output=True, text=True)
+            time.sleep(3)
+            placeholder(servers['a'], '%varstore_chat%', 'UNAVAILABLE', timeout=10)
+        finally:
+            subprocess.run(['docker', 'start', 'varstore-postgres'], check=True, capture_output=True, text=True)
+        deadline = time.monotonic() + 40
+        for server in servers.values():
+            while time.monotonic() < deadline:
+                line = server.command('varstore status', 'VarStore state=')
+                if 'state=READY' in line: break
+                time.sleep(.5)
+            else: raise AssertionError('Store did not recover after owned DB restart')
+        placeholder(servers['a'], '%varstore_chat%', 'true', timeout=20)
+        report['checks']['placeholder-db-outage'] = 'PASS: populated VALUE -> actual PostgreSQL stop -> UNAVAILABLE (never ABSENT/default); DB restarted in finally; both stores READY and primary value restored'
+    else:
+        report['checks']['placeholder-db-outage'] = 'NOT_RUN: requires VARSTORE_TEST_MAIN_DB_OUTAGE=true and the strictly verified owned loopback test container'
+
     player_id = next(json.loads(line)['uuid'] for line in bot.lines if '"event":"spawn"' in line)
     preview = servers['b'].command(f'varstore set {NETWORK} varstorepreferences NETWORK _ PLAYER {player_id} chat-visible BOOLEAN false', 'Confirm within')
     token = re.search(r'confirm ([0-9a-f-]{36})', preview).group(1)
@@ -183,8 +220,11 @@ try:
     bot.wait('Quest progress committed: 1', seconds=30)
     lock = held_row('varstorepreferences', 'chat-visible')
     before_transfer = len(servers['b'].lines)
+    before_request = len(servers['a'].lines)
     bot.send(json.dumps({'action': 'chat', 'text': '/preferences off'})); time.sleep(.08)
-    bot.send(json.dumps({'action': 'chat', 'text': '/preferences transfer b'})); time.sleep(.15)
+    bot.send(json.dumps({'action': 'chat', 'text': '/preferences transfer b'}))
+    servers['a'].wait('issued server command: /preferences transfer b', before_request, seconds=3)
+    time.sleep(.1)
     assert not any('VarStoreSmoke joined the game' in line for line in servers['b'].lines[before_transfer:])
     release(lock)
     bot.wait('Quest ready: monster kills=1', seconds=30)
@@ -214,6 +254,11 @@ try:
     time.sleep(.7); release(lock); time.sleep(1)
     assert not any('VS_UNLOAD_CONTINUED' in line for line in servers['a'].lines[start:])
     report['checks']['skript-unloaded-script'] = 'PASS: a real unloaded Skript script cannot resume after pending DB completion'
+    report['healthAfterGameplay'] = health_snapshot(servers)
+    report['healthScope'] = 'Low-player functional smoke with JFR enabled; raw TPS/MSPT observations, not a performance guarantee'
+    (RUN / 'io-completed').touch()
+    assert io_probe.p.wait(timeout=120) == 0, 'Extension JFR thread-boundary probe failed'
+    report['checks']['extension-io-probe'] = 'PASS: actual extension paths recorded; see verification/extension-io-probe.json for precise scope'
     servers['a'].stop()
     for module in ('varstore-skript', 'varstore-placeholderapi'):
         (RUN / 'a/plugins' / artifact(module, '*.jar').name).unlink()
@@ -226,6 +271,10 @@ except BaseException as error:
     report['status'] = 'FAIL'; report['error'] = repr(error)
     raise
 finally:
+    (RUN / 'io-completed').touch()
+    if io_probe is not None and io_probe.p.poll() is None:
+        try: io_probe.p.wait(timeout=120)
+        except subprocess.TimeoutExpired: io_probe.p.kill(); io_probe.p.wait()
     for lock in held_locks:
         if lock.poll() is None:
             try: release(lock)

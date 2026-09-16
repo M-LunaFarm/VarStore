@@ -1,0 +1,333 @@
+{
+  "startedAt": 1789559752.3308034,
+  "endedAt": 1789559792.2293644,
+  "requestedDurationSeconds": 300,
+  "method": "JFR profile plus SocketRead/SocketWrite, FileRead/FileWrite and ThreadPark threshold 0ms; stack-filtered real Paper JVM threads",
+  "scope": "Observed JDBC socket I/O and VarStore-attributed file I/O/future waits during this interval; does not prove unobserved code paths or waits shorter than recording precision",
+  "servers": {
+    "a": {
+      "pid": 3142031,
+      "recordingStart": "2026-09-16 11:55:53 (UTC)",
+      "recordingDurationSeconds": 39,
+      "jdbcSocketEvents": 9485,
+      "threadCounts": {
+        "varstore-db-1": 2216,
+        "varstore-db-4": 2270,
+        "varstore-db-3": 2244,
+        "varstore-db-2": 2298,
+        "varstore-health-1": 439,
+        "VarStore-borrow-a-3": 8,
+        "VarStore-borrow-a-2": 10
+      },
+      "mainThreadJdbcEvents": [],
+      "mainThreadVarStoreFileEvents": [
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.373 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.374 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.383 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.383 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.433 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.433 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.484 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.484 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.830 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:56.830 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.502 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.502 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.768 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.768 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.772 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:55:57.772 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.434 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.447 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.447 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.455 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.455 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.492 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.492 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.823 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.825 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:12.825 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.047 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.047 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.094 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.095 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.210 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:13.212 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:15.382 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:16.545 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:24.898 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.395 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.400 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.400 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.403 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.403 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.412 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:25.412 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:28.857 (2026-09-16)"
+        }
+      ],
+      "mainThreadVarStoreFutureWaitEvents": []
+    },
+    "b": {
+      "pid": 3144654,
+      "recordingStart": "2026-09-16 11:55:55 (UTC)",
+      "recordingDurationSeconds": 37,
+      "jdbcSocketEvents": 8531,
+      "threadCounts": {
+        "varstore-db-3": 2019,
+        "varstore-db-4": 2039,
+        "varstore-db-2": 1975,
+        "varstore-db-1": 2030,
+        "varstore-health-1": 434,
+        "VarStore-borrow-b-1": 18,
+        "VarStore-borrow-b-2": 8,
+        "VarStore-b:connection-adder": 8
+      },
+      "mainThreadJdbcEvents": [],
+      "mainThreadVarStoreFileEvents": [
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.006 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.013 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.013 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.022 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.022 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.055 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.055 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.065 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.065 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.083 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.083 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.117 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.118 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.137 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.137 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:14.138 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.545 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.568 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.568 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.573 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.573 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.579 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.579 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.620 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.620 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.822 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.954 (2026-09-16)"
+        },
+        {
+          "event": "jdk.FileRead",
+          "at": "20:56:23.955 (2026-09-16)"
+        }
+      ],
+      "mainThreadVarStoreFutureWaitEvents": []
+    }
+  },
+  "status": "FAIL"
+}

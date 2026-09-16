@@ -1,169 +1,135 @@
 {
-  "recordedAt": "2026-09-15T12:53:42.140720+00:00",
-  "implementationCommit": "234e7f19ef710bfcc3c02630a307132e586bc15c",
-  "sourceTreeSha256": "2eafd4910faccd69659c481c3be3bf367a051a44f101821a1acd71f82506db92",
-  "version": "1.0.0",
-  "requiredContracts": {
-    "T01": {
+  "version": "1.3.0",
+  "schemaVersion": 2,
+  "recordedAt": "2026-09-16T12:40:28.146333+00:00",
+  "implementationCommit": "09c575d992ec6073bc44862a3c958ae69b0f01f0",
+  "sourceTreeSha256": "8867958ca347d17da627832bfbd57ed900f724e1b7a3f579f2ced47a5a5ef4eb",
+  "totalTests": 112,
+  "status": "PASS",
+  "scope": "goal.md proposed releases 1.1, 1.2, 1.3 including bounded Codec; historical v1 evidence is archived separately",
+  "gates": {
+    "existingStorageContracts": {
       "status": "PASS",
       "evidence": [
-        "paper-smoke.json:checks.T01"
+        "contracts.json",
+        "commit-response.json",
+        "recovery.json",
+        "outage.json"
       ]
     },
-    "T02": {
+    "sequentialMigrationAndV1Receipts": {
       "status": "PASS",
       "evidence": [
-        "paper-smoke.json:checks.T02"
+        "upgrade-v1-v2.json",
+        "contracts.json:ExtensionContractTest"
       ]
     },
-    "T03": {
+    "definitionsAndBoundedOwnerPrefixPages": {
       "status": "PASS",
       "evidence": [
-        "recovery.json:checks.T03"
+        "contracts.json:LocalKeyRegistryTest",
+        "contracts.json:ExtensionContractTest",
+        "paper-extension.json:admin-metadata-cache"
       ]
     },
-    "T04": {
+    "boundedSameIdUnknownOutcomeRecovery": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:twoIndependentServersPreserveTwoThousandIncrements"
-      ]
-    },
-    "T05": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected"
-      ]
-    },
-    "T06": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected"
-      ]
-    },
-    "T07": {
-      "status": "PASS",
-      "evidence": [
+        "contracts.json:PendingWriteManagerTest",
         "commit-response.json"
       ]
     },
-    "T08": {
+    "paperSessionTransferAndLifecycle": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:casNoChangeAndDeleteRecreateProtectVersions"
+        "contracts.json:PaperSessionsTest",
+        "contracts.json:TrackedWritesTest",
+        "paper-extension.json"
       ]
     },
-    "T09": {
+    "atomicOutboxFanoutLeasesOrderRetryRetentionResync": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:casNoChangeAndDeleteRecreateProtectVersions"
+        "contracts.json:ExtensionContractTest",
+        "contracts.json:EventHubLifecycleTest",
+        "extensions-load.json"
       ]
     },
-    "T10": {
+    "explicitCacheBudgetsRacesExpiryAndEpoch": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:failedTransactionRollsBackPlaceholdersAndDurablyReplaysFailure"
+        "contracts.json:DisplayCacheTest",
+        "contracts.json:ExtensionIntegrationTest",
+        "extensions-load.json"
       ]
     },
-    "T11": {
+    "placeholderAndSkriptPinnedOptionalAddons": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite",
-        "outage.json",
-        "paper-io-probe.json"
+        "paper-extension.json"
       ]
     },
-    "T12": {
+    "boundedImmutableVersionedCodec": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:overflowMissingAndMismatchedTypesNeverBecomeAbsence",
-        "contracts.json:valuesEnforceBytesAndUnambiguousUnicode"
+        "contracts.json:CodecAdapterTest",
+        "paper-extension.json:structured-codec-consumer"
       ]
     },
-    "T13": {
+    "capacityAndReadOnlyCsvImportValidation": {
       "status": "PASS",
       "evidence": [
-        "paper-smoke.json:checks.T13"
+        "operator-tools.json",
+        "contracts.json:CsvDryRunTest"
       ]
     },
-    "T14": {
+    "gameThreadStorageIoAndIdGeneration": {
       "status": "PASS",
       "evidence": [
-        "paper-smoke.json:checks.T14"
+        "extension-io-probe.json",
+        "contracts.json:RuntimeIdsTest"
       ]
     },
-    "T15": {
+    "writeCostAndFiniteResourceBounds": {
       "status": "PASS",
       "evidence": [
-        "contracts.json:shutdownDistinguishesQueuedFromUnconfirmedWrite",
-        "contracts.json:boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite"
-      ]
-    },
-    "T16": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:resultRetentionNeverDeletesDedupMarker"
-      ]
-    },
-    "T17": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:concurrentMigrationIsSerializedAndSchemaTamperingRejected"
-      ]
-    },
-    "T18": {
-      "status": "PASS",
-      "evidence": [
-        "recovery.json:checks.T18"
-      ]
-    },
-    "T19": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:addressNamesAreCanonicalAndBounded",
-        "contracts.json:unicodeOwnersRemainDistinctThroughTransactionAndReplay"
-      ]
-    },
-    "T20": {
-      "status": "PASS",
-      "evidence": [
-        "contracts.json:planIsImmutableAndBoundsAllTargetsIncludingConditions",
-        "contracts.json:planRejectsTypeAmbiguityAndOversizedAggregate",
-        "contracts.json:byteAdmissionAndNamespaceAreCheckedBeforeStorage"
-      ]
-    },
-    "T21": {
-      "status": "PASS",
-      "evidence": [
-        "paper-smoke.json:checks.T21",
-        "contracts.json:auditIsAtomicAndDeduplicated"
-      ]
-    },
-    "T22": {
-      "status": "PASS",
-      "evidence": [
-        "outage.json",
-        "load-report.json",
-        "load-resources.csv"
+        "extensions-load.json",
+        "outage.json"
       ]
     }
   },
-  "additionalChecks": {
-    "realDeadlockRetry": "contracts.json:actualDeadlockRollsBackThenRetriesOriginalOperationExactlyOnce",
-    "runtimeDmlRole": "contracts.json:documentedRuntimeGrantsSupportStorageAndAuditButRejectDdlAndNetworkProvisioning",
-    "callbackIsolationAndBounds": "contracts.json:blockedCallbacksDoNotStarveOtherFuturesAndDeliveryCapacityStaysBounded",
-    "binaryIntegrity": "artifacts.json",
-    "twoLiveConsumers": "paper-smoke.json:checks.consumers",
-    "paperMainThreadCalls": 12000,
-    "mainThreadJdbcEventsObserved": 0
+  "evidenceSha256": {
+    "contracts.json": "222f2eec7ff969a566dc768e50870ea58e42dac48148b48741f4a6d16ccc3877",
+    "paper-extension.json": "2d092bdf95ec128e770ac400dabd1f8b6d5865d1d2500f787a8af98617fe7550",
+    "extension-io-probe.json": "ffc75507f48b1341429f5b827cba8744bd338e7a3e95d08676cbfeea5f0f239f",
+    "extensions-load.json": "7bbd6c2630e8b0e39ced62bf461c5c3b0841d767f1d3d058799eb90658dc4284",
+    "commit-response.json": "0f788688496a921b6a52fd3400ecc0acccf435694076b8c2916bbfb5929c6ace",
+    "recovery.json": "149ebb7e512bc3a1cd2677321deecf7c39f5bfbfb9976702f0a0cd195bff501f",
+    "outage.json": "9d6ab86dabf2d0ee9c014748c77d20149045d658073034839679fe35fcbfb637",
+    "upgrade-v1-v2.json": "573394e3c49355c54d32bf10319ceccdb8c495269d0fb19e3e20d8ca385a6d6e",
+    "operator-tools.json": "27e00987b407079dd964a27b15b1b356258b86c8327d354a6ee2b19c666875d5"
   },
-  "performanceScope": {
-    "paperBaselineAggregateThresholdsMet": true,
-    "allPaperPhasesErrors": 0,
-    "standaloneStress": "Capacity measured with 549 errors under shared maximum-transaction contention and immediate recovery; see load-report.json. This is not a zero-error claim.",
-    "limitations": [
-      "Finite tests do not prove absence of all long-term leaks.",
-      "Shared test host differs from the proposed dedicated 4-vCPU, 8-GiB SSD reference.",
-      "Paper baseline writes include 1,200 APPLIED and 600 NO_CHANGE receipts; both commit operation records."
-    ]
-  }
+  "limitations": [
+    "Finite local integration/soak observations do not establish all long-term leak or production latency guarantees.",
+    "Paper TPS/MSPT snapshots are low-player functional observations, not a capacity benchmark.",
+    "JFR first-use PluginClassLoader JAR reads are retained separately; zero application I/O is not zero classloading I/O.",
+    "WAL LSN deltas cover the whole PostgreSQL cluster, including background activity and other databases.",
+    "V1 large Paper benchmarks are historical and are not results for the extension runtime.",
+    "Upgrade rehearsal retained all legacy row hashes; migration sources were unchanged by later ID and subscription lifecycle fixes."
+  ],
+  "preservedDiagnostics": [
+    "diagnostic-extension-initial/",
+    "diagnostic-extension-jfr/",
+    "diagnostic-build-contention/",
+    "diagnostic-extension-churn/"
+  ],
+  "explicitlyDeferred": [
+    "TTL",
+    "proxy JVM adapters",
+    "Folia",
+    "additional storage engines",
+    "large objects",
+    "inventory synchronization",
+    "economy-specific ledger"
+  ]
 }

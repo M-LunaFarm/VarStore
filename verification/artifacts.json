@@ -1,65 +1,263 @@
 {
-  "version": "1.0.0",
-  "schemaVersion": 1,
-  "recordedAt": "2026-09-15T12:39:44.489404+00:00",
-  "sourceTreeSha256": "2eafd4910faccd69659c481c3be3bf367a051a44f101821a1acd71f82506db92",
+  "version": "1.3.0",
+  "schemaVersion": 2,
+  "recordedAt": "2026-09-16T12:40:28.146333+00:00",
+  "implementationCommit": "09c575d992ec6073bc44862a3c958ae69b0f01f0",
+  "sourceTreeSha256": "8867958ca347d17da627832bfbd57ed900f724e1b7a3f579f2ced47a5a5ef4eb",
   "artifacts": [
     {
-      "path": "examples/build/libs/examples-1.0.0.jar",
+      "path": "examples/build/libs/examples-1.3.0-javadoc.jar",
       "bytes": 261,
-      "sha256": "b0558b086e02dae3edb8a9b979ee6e4cf5c3103bdef85bec7e4a866d22bda802"
+      "sha256": "7ef66cebefc2f16f1a310fe144585f4b36c86a4a21151866cf4e14f03fdccc25"
     },
     {
-      "path": "varstore-api/build/libs/varstore-api-1.0.0.jar",
-      "bytes": 40085,
-      "sha256": "5f5803a808883f1843e909a5291d08f2d7b88f8b714a484ba8c94627d4dff70d"
+      "path": "examples/build/libs/examples-1.3.0-sources.jar",
+      "bytes": 261,
+      "sha256": "16cd05987014f6f14ecd7df16ed6f6bb6878d419a64733de08d4126577756c52"
     },
     {
-      "path": "varstore-core/build/libs/varstore-core-1.0.0.jar",
-      "bytes": 23563,
-      "sha256": "3e70aaa811d2f0f20a327ddc459d2340b0a402a0daf75ffb20b91d542b677fc8"
+      "path": "examples/build/libs/examples-1.3.0.jar",
+      "bytes": 261,
+      "sha256": "7ef66cebefc2f16f1a310fe144585f4b36c86a4a21151866cf4e14f03fdccc25"
     },
     {
-      "path": "varstore-paper/build/libs/varstore-paper-1.0.0.jar",
-      "bytes": 1684765,
-      "sha256": "91df7fae605a5d55a08c163e150022f153b52053f1011786621fcf755c6c80c1"
+      "path": "examples/preferences/build/libs/preferences-1.3.0-javadoc.jar",
+      "bytes": 84798,
+      "sha256": "483eddf7432abc96b2ee0d3c0226b3d4df92c5535d9d6613b253c2e8c7f3920d"
     },
     {
-      "path": "varstore-postgres/build/libs/varstore-postgres-1.0.0.jar",
-      "bytes": 38454,
-      "sha256": "73ecd01ae221cd7a0ca345a9647e33e56787dbc1a08e794abf537ec3c64b4933"
+      "path": "examples/preferences/build/libs/preferences-1.3.0-sources.jar",
+      "bytes": 3839,
+      "sha256": "2000ca0180a99e4e6051c47b4f66f0864d48ac2b637a2404255091f6b7c971c0"
     },
     {
-      "path": "varstore-testkit/build/libs/varstore-testkit-1.0.0.jar",
-      "bytes": 43967,
-      "sha256": "71ad7f3ec48bbe825fbec3e993ff18c252b95de166f064e15a05a8787e401a6c"
+      "path": "examples/preferences/build/libs/preferences-1.3.0.jar",
+      "bytes": 8556,
+      "sha256": "68986b63b9ac9c09c90aab20ba1bbace629aae396201808c2de530346d7fc972"
     },
     {
-      "path": "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.0.0.jar",
-      "bytes": 14223,
-      "sha256": "a257db467d3e6a58e24b918a988c9dd999d1dea1f55ab979752deda575e1b476"
+      "path": "examples/quests/build/libs/quests-1.3.0-javadoc.jar",
+      "bytes": 84709,
+      "sha256": "c786c5dd9ab5300679815806dfe93740c7f9fdf682c1f012294392022d43d4f7"
     },
     {
-      "path": "varstore-tools/build/libs/varstore-tools-1.0.0.jar",
-      "bytes": 1665718,
-      "sha256": "025579f4c3f9f9e3d287e6210c1371968e3eb30b03ab94fe7abff1fdf20a1adb"
+      "path": "examples/quests/build/libs/quests-1.3.0-sources.jar",
+      "bytes": 3028,
+      "sha256": "104b793205f68a68ac3651fcd602c254330ce08953f980bef88c60a1493fcbe8"
     },
     {
-      "path": "examples/preferences/build/libs/preferences-1.0.0.jar",
-      "bytes": 6706,
-      "sha256": "84a8327580d9d1b5b3bcdfc6af4c987a9da6bad9558c167fc283755d6c2247d1"
+      "path": "examples/quests/build/libs/quests-1.3.0.jar",
+      "bytes": 6476,
+      "sha256": "be85dc9fc9477f576ee9020d327e1388b5e7f2e71933ff39d480d91f4764a66e"
     },
     {
-      "path": "examples/rewards/build/libs/rewards-1.0.0.jar",
-      "bytes": 7075,
-      "sha256": "18a5a8187d092340d533d1cf7a781b376128fbce87ed9b610a04f1e10f860afd"
+      "path": "examples/rewards/build/libs/rewards-1.3.0-javadoc.jar",
+      "bytes": 84373,
+      "sha256": "81ff1ed766269e25033aa24daf96eccdc8dbbfd8ea24022e364b486aa5de6a9f"
+    },
+    {
+      "path": "examples/rewards/build/libs/rewards-1.3.0-sources.jar",
+      "bytes": 3509,
+      "sha256": "2c8570b70d6cc1c8b2b30f35cd23743dce5aaf2829a3d0d2b1ed1f5a0f774934"
+    },
+    {
+      "path": "examples/rewards/build/libs/rewards-1.3.0.jar",
+      "bytes": 7339,
+      "sha256": "b9e57cbc89cf0d0676cc0e18a83f0e67508fa1603bedf0abfe212549c6bbba90"
+    },
+    {
+      "path": "examples/structured/build/libs/structured-1.3.0-javadoc.jar",
+      "bytes": 88998,
+      "sha256": "f1e85c088f2cc38affc2cbbc8d8647add6bcb9445c5359200999966bf75974f2"
+    },
+    {
+      "path": "examples/structured/build/libs/structured-1.3.0-sources.jar",
+      "bytes": 3918,
+      "sha256": "c79106a6b5e70e973d49a9872d9b30a10dae7127bbcbaf7ad54eefb9903dc9a9"
+    },
+    {
+      "path": "examples/structured/build/libs/structured-1.3.0.jar",
+      "bytes": 9848,
+      "sha256": "d8ac1f2d2202360f700d275c1e4c1c5dcc4a2ceb69c61e32c2015acdcac50ce5"
+    },
+    {
+      "path": "varstore-api/build/libs/varstore-api-1.3.0-javadoc.jar",
+      "bytes": 276041,
+      "sha256": "706d9231194e2156f63ba8ef768bc2631cc6a25f65d53b9151f60d0bdd27ecb0"
+    },
+    {
+      "path": "varstore-api/build/libs/varstore-api-1.3.0-sources.jar",
+      "bytes": 25462,
+      "sha256": "6e7eab15adb10d3112bb69caf5bdc7c6c644113ff2041686f402ce29d6a11dbb"
+    },
+    {
+      "path": "varstore-api/build/libs/varstore-api-1.3.0.jar",
+      "bytes": 62501,
+      "sha256": "9879e2f056dab58c23475f5c27dc6498aa11015ad2ced4e5732f595381d868e7"
+    },
+    {
+      "path": "varstore-cache/build/libs/varstore-cache-1.3.0-javadoc.jar",
+      "bytes": 104434,
+      "sha256": "3cb2721d2b743f872950b8b566d6cfcfee7753f3ae0924ed42861ee11bad4251"
+    },
+    {
+      "path": "varstore-cache/build/libs/varstore-cache-1.3.0-sources.jar",
+      "bytes": 8278,
+      "sha256": "7240a7dcb4b9d3f2d3036207481fc822bfc868ff812f48e27433d680c134c199"
+    },
+    {
+      "path": "varstore-cache/build/libs/varstore-cache-1.3.0.jar",
+      "bytes": 21625,
+      "sha256": "dfcb50315bccd8beba1cf00d7c3aa035fe8353a5521cbf7efdd33b5efb588526"
+    },
+    {
+      "path": "varstore-codec/build/libs/varstore-codec-1.3.0-javadoc.jar",
+      "bytes": 131385,
+      "sha256": "fa451027d23d4208e17b25f49e33417e5b1ef14a2d1ce57d97b8e289910ef055"
+    },
+    {
+      "path": "varstore-codec/build/libs/varstore-codec-1.3.0-sources.jar",
+      "bytes": 9760,
+      "sha256": "d113afb9962bff4cd3dce6420d9c3a6a0d9e10c2545c4bb0fc89f23fb923a9e2"
+    },
+    {
+      "path": "varstore-codec/build/libs/varstore-codec-1.3.0.jar",
+      "bytes": 27288,
+      "sha256": "a80a06b3508c923c88902672f7d29b72e49e060ec90cfb582b95f1f6b5e4fbb8"
+    },
+    {
+      "path": "varstore-core/build/libs/varstore-core-1.3.0-javadoc.jar",
+      "bytes": 88352,
+      "sha256": "9fd20696a9624553c2c56f47cc2390382460ce70441003618c8509659fedb0c9"
+    },
+    {
+      "path": "varstore-core/build/libs/varstore-core-1.3.0-sources.jar",
+      "bytes": 14649,
+      "sha256": "dd5aaecdfe677020bdb8ccd6957ad75df4ac7b1e9b63eecae16856d32b14fa44"
+    },
+    {
+      "path": "varstore-core/build/libs/varstore-core-1.3.0.jar",
+      "bytes": 50956,
+      "sha256": "8c1fb0ee654a2bfc90d8dfe398b2677f915a70cf1b0feaa2dc60f8b20a89b03f"
+    },
+    {
+      "path": "varstore-paper/build/libs/varstore-paper-1.3.0-javadoc.jar",
+      "bytes": 105887,
+      "sha256": "5f0a2a25ad929c481d77ff45d54e14be3b66ba36454be8390521f54331b45164"
+    },
+    {
+      "path": "varstore-paper/build/libs/varstore-paper-1.3.0-sources.jar",
+      "bytes": 14004,
+      "sha256": "8742b8792dac2fa683b246b8817c02a0fffa319fd61b8d41320ae5e526a3e734"
+    },
+    {
+      "path": "varstore-paper/build/libs/varstore-paper-1.3.0-thin.jar",
+      "bytes": 36701,
+      "sha256": "72cf9d66333ea75a993d1034479c0c5f48d214fa7e88ca5c588e5f723f144176"
+    },
+    {
+      "path": "varstore-paper/build/libs/varstore-paper-1.3.0.jar",
+      "bytes": 1818274,
+      "sha256": "aacba3d0be7984fc12c1430315705af38586ade62508f51e1566a47bbb0cc9b4"
+    },
+    {
+      "path": "varstore-placeholderapi/build/libs/varstore-placeholderapi-1.3.0-javadoc.jar",
+      "bytes": 84111,
+      "sha256": "859b964650d5ff2c27bf5ea3de93a900e0c6fcb4d34ba20579ced10c550ee37c"
+    },
+    {
+      "path": "varstore-placeholderapi/build/libs/varstore-placeholderapi-1.3.0-sources.jar",
+      "bytes": 4006,
+      "sha256": "35095473cd7046974e2ea3d6c0d1d0f26da6796c32c6001c740f1a9d42aa3aac"
+    },
+    {
+      "path": "varstore-placeholderapi/build/libs/varstore-placeholderapi-1.3.0.jar",
+      "bytes": 10474,
+      "sha256": "b6c023f291d031fce195d8159aacaa49746ba5699fef02c08dc37d9e0f4e32e3"
+    },
+    {
+      "path": "varstore-postgres/build/libs/varstore-postgres-1.3.0-javadoc.jar",
+      "bytes": 101587,
+      "sha256": "8c7687c44143cae50859a0844af07a26c13f1d8adc76608251afee6223269683"
+    },
+    {
+      "path": "varstore-postgres/build/libs/varstore-postgres-1.3.0-sources.jar",
+      "bytes": 25493,
+      "sha256": "ba40847fe65eb9fb1d1960c70df5edb12925745909e11cfe150cac0140c815b3"
+    },
+    {
+      "path": "varstore-postgres/build/libs/varstore-postgres-1.3.0.jar",
+      "bytes": 61823,
+      "sha256": "e207f7c84fab224975677939fb458d67c7b6f67cc780897f54aafc23e1b1c332"
+    },
+    {
+      "path": "varstore-skript/build/libs/varstore-skript-1.3.0-javadoc.jar",
+      "bytes": 87790,
+      "sha256": "caed394cd7b463eeb16aa9ebad65a1c18df3a13fa63d3c2b8558679a6118a728"
+    },
+    {
+      "path": "varstore-skript/build/libs/varstore-skript-1.3.0-sources.jar",
+      "bytes": 4824,
+      "sha256": "f24fdca53be9d619a58733da40496413bf2857cec09f84f7804818199984fde2"
+    },
+    {
+      "path": "varstore-skript/build/libs/varstore-skript-1.3.0.jar",
+      "bytes": 11931,
+      "sha256": "baeac9e9853819342b88cd572d1d8586baf81d51e0d3511622a3d594a26f43d9"
+    },
+    {
+      "path": "varstore-testkit/build/libs/varstore-testkit-1.3.0-javadoc.jar",
+      "bytes": 101746,
+      "sha256": "f9972ccb94f70c43e7c1a5cf8d26a584e2a8f50945ddbb3fef1d5745ea85837e"
+    },
+    {
+      "path": "varstore-testkit/build/libs/varstore-testkit-1.3.0-sources.jar",
+      "bytes": 26249,
+      "sha256": "7d1206d0a614915b7a8d02584b0534f8a76157145d28d4e7c3267bcd40e36270"
+    },
+    {
+      "path": "varstore-testkit/build/libs/varstore-testkit-1.3.0.jar",
+      "bytes": 65188,
+      "sha256": "c04a32f8dc34fef9ac4c3d71504f1730af99c123ca3722eef681ef9aee6fe7ac"
+    },
+    {
+      "path": "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.3.0-javadoc.jar",
+      "bytes": 83915,
+      "sha256": "2a9c3104191ad7b3410bbad9d422e92602ae770a8e10450c9c33fe7e495879ea"
+    },
+    {
+      "path": "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.3.0-sources.jar",
+      "bytes": 5746,
+      "sha256": "670f46afa8c5225842dba4363b3fa4a55f5670f2d36363644a6aa3ff9190bceb"
+    },
+    {
+      "path": "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.3.0.jar",
+      "bytes": 14224,
+      "sha256": "fbaf74a8b189ce028aaa809c985f636285cbd4234fc7eb83bf413a4d345aa4ae"
+    },
+    {
+      "path": "varstore-tools/build/libs/varstore-tools-1.3.0-javadoc.jar",
+      "bytes": 95340,
+      "sha256": "0ff07d5ccad9e69039731e48209e03a4763c44991a510065dc82677f2d9c7d95"
+    },
+    {
+      "path": "varstore-tools/build/libs/varstore-tools-1.3.0-sources.jar",
+      "bytes": 6886,
+      "sha256": "6bf297e93e5a4b206d3444a9813b601c1412a379d55e03f8216855d95b135617"
+    },
+    {
+      "path": "varstore-tools/build/libs/varstore-tools-1.3.0-thin.jar",
+      "bytes": 17228,
+      "sha256": "e68d9b56f936a06dcd5f646aa37c1c9f8a26a31ca632dc06443ed44da849d621"
+    },
+    {
+      "path": "varstore-tools/build/libs/varstore-tools-1.3.0.jar",
+      "bytes": 1751215,
+      "sha256": "81203efa649aae4b75923be6088bac75c118f494f710cb1d90b4215ae48bc709"
     }
   ],
   "serverJarChecks": {
     "relocatedJdbcAndPool": true,
-    "versionMetadata": true,
-    "examplesExcludeApiClasses": true,
-    "apiSourcesAndJavadocPresent": true
-  },
-  "implementationCommit": "234e7f19ef710bfcc3c02630a307132e586bc15c"
+    "examplesExcludeApiClasses": true
+  }
 }

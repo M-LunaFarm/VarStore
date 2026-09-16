@@ -56,6 +56,8 @@ def main():
         raise AssertionError('Baseline/current event accounting mismatch')
     report = {'status': 'PASS', 'elapsedSeconds': time.monotonic() - start,
               'java': JAVA, 'artifactsSha256': provenance, 'baseline': v1, 'extended': v2,
+              'walCounterScope': 'POSTGRESQL_CLUSTER (all databases and background activity)',
+              'walFieldNote': 'databaseWideWalBytes is a legacy field name; pg_current_wal_lsn is cluster-wide, not database-specific.',
               'comparison': {'p50LatencyRatio': v2['p50Micros'] / v1['p50Micros'],
                              'p95LatencyRatio': v2['p95Micros'] / v1['p95Micros'],
                              'p99LatencyRatio': v2['p99Micros'] / v1['p99Micros'],

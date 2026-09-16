@@ -1,19 +1,31 @@
 {
-  "test": "T07",
-  "passed": true,
-  "fault": "actual COMMIT response bytes dropped",
-  "value": 1,
+  "status": "PASS",
+  "checks": {
+    "pre-commit": {
+      "test": "T07_PRE_COMMIT",
+      "passed": true,
+      "fault": "actual backend connection closed before COMMIT forwarding",
+      "value": 1,
+      "outbox_events_before_retry": 0,
+      "outbox_events_after_retry": 1
+    },
+    "commit-response": {
+      "test": "T07",
+      "passed": true,
+      "fault": "actual COMMIT response bytes dropped",
+      "value": 1,
+      "outbox_events_before_retry": 1,
+      "outbox_events_after_retry": 1
+    }
+  },
+  "artifactSha256": "c04a32f8dc34fef9ac4c3d71504f1730af99c123ca3722eef681ef9aee6fe7ac",
   "proxy": {
     "armed": false,
     "triggered": 2,
-    "dropped_bytes": 46,
-    "triggered_at": 1789475934.6608732,
-    "countsAreCumulative": true
+    "dropped_bytes": 23,
+    "triggered_at": 1789561468.194759,
+    "mode": "commit-response"
   },
-  "recordedAt": "2026-09-15T12:38:58.066921+00:00",
-  "version": "1.0.0",
-  "thisRun": {
-    "triggered": 1,
-    "droppedBytes": 23
-  }
+  "ownedProxyTerminal": true,
+  "recordedAt": "2026-09-16T12:24:31Z"
 }

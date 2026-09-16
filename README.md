@@ -244,7 +244,7 @@ extensions.events().subscribe(spec, event -> {
 
 위의 `displayState`는 소비자의 캐시/표시 상태입니다. 아래 `CacheHandle`을 사용하면 구독·무효화·재설정이 자동 연결되므로 별도 구독을 만들 필요가 없습니다. EPHEMERAL은 살아 있는 대상별 표시용, DURABLE은 고정 subscriber ID로 재시작 후 미처리 알림을 회수하는 용도입니다. 각 서버는 서로 다른 ID를 사용해야 모두 전달받습니다. 구독은 활성화 이후부터 시작하며 이전 변경 이력 전체를 제공하지 않습니다.
 
-코어 인스턴스별 구독은 최대 64개, 소비자 콜백 슬롯은 128개입니다. 250ms 간격으로 최대 8개씩 회수하고 heartbeat로 구독 리스를 갱신합니다. 콜백 기한은 전달 리스와 20초 중 짧은 쪽보다 작으며, 실패는 지수 간격으로 최대 8회 전달한 뒤 dead letter로 남습니다. 기한이 지난 콜백의 사용자 코드는 나중에 끝날 수도 있으므로 그 효과는 소비자가 멱등하게 처리해야 합니다.
+코어 인스턴스별 구독은 최대 64개, 소비자 콜백 슬롯은 128개입니다. 250ms 간격으로 최대 8개씩 회수하고 heartbeat로 구독 리스를 갱신합니다. 콜백 기한은 전달 리스와 20초 중 짧은 쪽보다 작으며, 실패는 지수 간격으로 최대 8회 전달한 뒤 dead letter로 남습니다. 실패 응답 없이 프로세스가 반복 종료되는 경우에도 DB의 누적 회수 100회 한도로 제한하며, 재등록으로 이 한도를 초기화하지 않습니다. 기한이 지난 콜백의 사용자 코드는 나중에 끝날 수도 있으므로 그 효과는 소비자가 멱등하게 처리해야 합니다.
 
 전달은 중복될 수 있습니다. 콜백은 멱등하게 만들고 비동기 완료가 성공해야 ack합니다. 지속 실패는 dead letter에 남으며 `subscription.retryDeadLetters(limit)`로 제한된 재전달을 요청합니다. `state().resyncRequired()` 또는 resync 콜백을 받으면 표시 상태를 지운 뒤 `subscription.reset()` 완료까지 새 로딩을 보류합니다. reset은 해당 구독의 대기·dead-letter 행을 버리는 명시적 재동기화 경계이며, 완료 뒤 Primary 스냅샷을 읽습니다. 보존 범위를 넘은 알림을 복구했다고 가정하지 않습니다. 자체 이벤트 구독은 이 재설정 절차를 직접 구현해야 합니다. outbox는 아이템 지급의 exactly-once 보장이 아닙니다.
 
@@ -483,6 +483,36 @@ pg_restore --exit-on-error --dbname=varstore_restored varstore.dump
 스키마 버전 2는 V001과 V002의 이력·도구가 만든 테이블·제약·인덱스·시퀀스 설정을 기준으로 검증하며 사용자 트리거·재작성 규칙·행 보안 정책은 허용하지 않습니다. 운영 테이블을 수동 확장하지 않습니다.
 
 변수 하나를 반복 수정해도 작업 표식은 계속 늘어납니다. 초당 쓰기 10건이면 하루 864,000개 표식입니다. `diagnostics`와 부하 시험 결과로 테이블·인덱스·WAL·백업 비용을 산정하세요. 매 틱 좌표 저장이나 스코어보드 최신값 조회 용도는 권장하지 않습니다.
+
+## 1.3.0 확장 검증
+
+검증 환경은 Paper 1.21.11 build 132, BungeeCord 2093, Java 21, PostgreSQL 18입니다. 선택 애드온은 Skript 2.16.1과 PlaceholderAPI 2.12.3에서 실행했습니다. 루프백의 실제 서버와 봇을 이용한 기능 시험이며 접속자 규모별 TPS 보장은 아닙니다.
+
+| 검증 | 근거 |
+| --- | --- |
+| 실제 DB를 포함한 전체 자동 계약 | 112개 통과, 실패·건너뜀 0: [`contracts.json`](verification/contracts.json): 테스트별 이름·결과·소스 해시 |
+| 1.0 데이터 업그레이드 | 변수 300,188행·작업 20,153행·감사 27행·네트워크 67행의 전체 행 집계 해시와 기존 V001 이력 보존: [`upgrade-v1-v2.json`](verification/upgrade-v1-v2.json) |
+| 실제 Paper 11개 항목 | 4타입 Skript·오류·목록, 캐시 무효화, 실제 DB 단절, 진행 중 쓰기와 서버 이동, 재접속·스크립트 unload, Codec, 애드온 없는 재시작: [`paper-extension.json`](verification/paper-extension.json) |
+| 게임 스레드 I/O | 관측 구간의 메인 스레드 JDBC·애플리케이션 파일 I/O·Future 대기 0건. 최초 클래스 로딩의 JAR 읽기는 별도 기록: [`extension-io-probe.json`](verification/extension-io-probe.json) |
+| 커밋 전후 연결 단절 | COMMIT 전달 전 연결 종료 및 실제 COMMIT 응답 폐기, 동일 ID 재시도와 변수·outbox 중복 방지: [`commit-response.json`](verification/commit-response.json) |
+| 강제 종료·백업 복원·반복 단절 | 실제 DB SIGKILL, 전체 DB 복원과 epoch 차단, 183.217초 동안 DB 중단·복구 10회. 고유 작업 ID 3,133개와 최종 증가값 일치: [`recovery.json`](verification/recovery.json), [`outage.json`](verification/outage.json) |
+| 운영 도구 | 용량·증가량 표본, 4타입 CSV dry-run, 기존 주소 충돌 거절: [`operator-tools.json`](verification/operator-tools.json) |
+| outbox 비용·캐시·자원 회수 | 동일 하네스의 1.0/1.3 비교와 180초 확장 부하: [`extensions-load.json`](verification/extensions-load.json) |
+
+정확한 실행 바이너리 해시와 기능별 근거는 [`artifacts.json`](verification/artifacts.json), [`release-audit.json`](verification/release-audit.json)에 있습니다. 기존 대규모 Paper 부하 수치는 아래의 1.0 기록에만 해당합니다. 새 비교 시험은 공유 호스트에서 단일 작업자가 순차 쓰기한 결과이며, WAL 증분은 **PostgreSQL 클러스터 전체**의 카운터라 다른 DB와 백그라운드 활동도 포함합니다. 유한한 자원 관측은 장기 누수 부재를 증명하지 않습니다.
+
+동일 Java 하네스로 200회 예열 후 실제 값이 바뀌는 LONG 쓰기 2,000회를 순차 실행했습니다. 구독자가 없는 새 스키마를 사용하고 1.0 다음 1.3 순서로 측정했습니다. 1.3은 예열을 포함한 변경 2,200건에 outbox 이벤트 2,200개를 생성했습니다.
+
+| 런타임 | p50 / p95 / p99 (ms) | 측정 쓰기 시간 | 클러스터 WAL 증분 |
+| --- | ---: | ---: | ---: |
+| 1.0.0 / 스키마 1 | 16.264 / 40.930 / 76.422 | 38.922초 | 2,339,024바이트 |
+| 1.3.0 / 스키마 2 | 18.677 / 48.519 / 95.451 | 45.457초 | 3,802,344바이트 |
+
+180.027초의 확장 부하에서는 변경 쓰기·고유 전달 이벤트가 각각 2,347건, 캐시 호출이 37,800건이었고 주입한 소비자 실패 93건을 재전달했습니다. 안정된 값 1,000회 조회는 직접 조회에서 DB 읽기 1,000회, 캐시에서 1회였습니다. 구독 생성·종료 17회와 로딩 중 무효화를 포함했으며, 종료 후 캐시 핸들·항목·바이트, 연결·대기 슬롯·보유 요청 바이트·VarStore 플랫폼 스레드는 모두 0이었습니다. 임시 구독은 0행, 재시작용 durable 구독은 의도대로 1행을 남겼습니다. 종료 후 GC 기준 힙 증가는 307,312바이트였습니다.
+
+검증 중 발견한 실패도 보존했습니다. 최초 Skript 표현식 처리, 메인 스레드의 난수 장치 읽기, 구독 종료와 outbox 전달 생성의 경쟁 조건은 각각 수정 후 재검증했습니다. 병행 빌드 중 발생한 500ms DB 잠금 시간초과와, 캐시 첫 읽기에 항상 값이 있다고 가정했던 CI 테스트 실패도 별도 기록했습니다. CI 로그에는 캐시 상태가 남지 않아 구체적인 발생 순서는 단정하지 않습니다. 캐시 테스트는 무효화와 겹친 STALE만 제한적으로 다시 읽도록 수정했으며 운영 시간초과나 오류 의미를 바꾸지 않았습니다. [`diagnostic-extension-initial/`](verification/diagnostic-extension-initial/), [`diagnostic-extension-jfr/`](verification/diagnostic-extension-jfr/), [`diagnostic-extension-churn/`](verification/diagnostic-extension-churn/), [`diagnostic-build-contention/`](verification/diagnostic-build-contention/)에서 확인할 수 있습니다.
+
+재현 도구: `scripts/paper-extension-smoke.py`, `scripts/commit-fault-test.py`, `scripts/recovery-test.py`, `scripts/outage-test.py`, `scripts/extensions-load.py`. 장애·JFR·성능 시험을 동시에 실행하지 마세요. 실제 기본 DB 중단까지 포함하는 Paper 시험은 전용 시험 컨테이너에서 `VARSTORE_TEST_MAIN_DB_OUTAGE=true`로 실행합니다.
 
 ## 1.0.0의 기존 실행 기록
 

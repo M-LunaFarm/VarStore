@@ -1,20 +1,38 @@
 {
-  "network": "papersmoke-207020e1",
+  "network": "papersmoke-7c88d62c",
   "paper": "1.21.11 build 132",
   "bungee": "2093",
   "java": "21",
   "postgres": "18",
   "scope": "loopback offline-auth integration only",
-  "checks": {},
+  "checks": {
+    "skript-scalars-list-errors": "PASS: actual Skript continuation with STRING/LONG/BOOLEAN/UUID, atomic increment, two metadata pages, explicit network/server scope, ABSENT vs TYPE_MISMATCH failure",
+    "admin-metadata-cache": "PASS: live definition/list/cache diagnostics",
+    "placeholder-allowlist": "PASS: configured chat display loads; unknown placeholder remains unexpanded",
+    "placeholder-db-outage": "PASS: populated VALUE -> actual PostgreSQL stop -> UNAVAILABLE (never ABSENT/default); DB restarted in finally; both stores READY and primary value restored",
+    "placeholder-fanout": {
+      "status": "PASS",
+      "maxAgeSeconds": 30,
+      "observedSecondsAfterOtherServerCommit": 0.45122197549790144,
+      "description": "A cached true before B committed false; A reload occurred well before TTL"
+    },
+    "structured-codec-consumer": "PASS: explicit Codec save/replay/conflicting-payload rejection and decoded profile settings after actual server movement",
+    "game-consumers-transfer": "PASS: actual killed monster increment, tracked-write-gated Bungee movement, Primary quest load on B, daily reward replay across servers",
+    "skript-stale-session": "PASS: blocked write completion after player disconnect does not continue old script into reconnected session",
+    "skript-unloaded-script": "PASS: a real unloaded Skript script cannot resume after pending DB completion",
+    "extension-io-probe": "PASS: actual extension paths recorded; see verification/extension-io-probe.json for precise scope",
+    "optional-addons-absent": "PASS: restarted base VarStore without Skript or PlaceholderAPI jars; committed data still reads"
+  },
   "artifactSha256": {
     "paper.jar": "5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba",
     "bungee.jar": "4270d174c64516a27d5e8be3775ab19182f2ce2153635212af957d6feef7a604",
-    "varstore-paper": "8de705cb823144a126e8862c652b3209a45f6c398a37d085fa26d390eabc57bf",
-    "varstore-tools": "4f12179064ef878253b62e3802942f38f44b54f270307ae950dcaa88e103371c",
-    "examples/preferences": "e9e520efed57526f380e0d9f37b9ea2a527a92d25d89e96495d0a117bcc642e7",
+    "varstore-paper": "aacba3d0be7984fc12c1430315705af38586ade62508f51e1566a47bbb0cc9b4",
+    "varstore-tools": "81203efa649aae4b75923be6088bac75c118f494f710cb1d90b4215ae48bc709",
+    "examples/preferences": "68986b63b9ac9c09c90aab20ba1bbace629aae396201808c2de530346d7fc972",
     "examples/rewards": "b9e57cbc89cf0d0676cc0e18a83f0e67508fa1603bedf0abfe212549c6bbba90",
-    "examples/quests": "7954a491c702b1403b031baca1819e9003e82e5e425a5c332c27d145f09ea9d1",
-    "varstore-skript": "c2abd377d066f124646610f8257764c68006b082690a6fac907bddf53a7c304d",
+    "examples/quests": "be85dc9fc9477f576ee9020d327e1388b5e7f2e71933ff39d480d91f4764a66e",
+    "examples/structured": "d8ac1f2d2202360f700d275c1e4c1c5dcc4a2ceb69c61e32c2015acdcac50ce5",
+    "varstore-skript": "baeac9e9853819342b88cd572d1d8586baf81d51e0d3511622a3d594a26f43d9",
     "varstore-placeholderapi": "b6c023f291d031fce195d8159aacaa49746ba5699fef02c08dc37d9e0f4e32e3",
     "skript": "8357a348b27cd8a2cf749998e4ad14bd1dca3160026bd3042d6d17cfb4c98a70",
     "placeholderapi": "fde03259f5af6938f3c33eeb4d814000a1adabf1d2304ce14970be81f609a437"
@@ -22,8 +40,40 @@
   "mineflayer": "4.39.0",
   "skript": "2.16.1",
   "placeholderapi": "2.12.3",
-  "status": "FAIL",
-  "error": "AssertionError('a timed out waiting for VS_SCALAR_LIST_PASS: [\\'[20:39:33 INFO]: Done (61.593s)! For help, type \"help\"\\\\n\\', \\'[20:39:33 WARN]: *************************************************************************************\\\\n\\', \\'[20:39:33 WARN]: You are running the latest build for your Minecraft version (1.21.11)\\\\n\\', \\'[20:39:33 WARN]: However, you are 4 release(s) behind the latest stable release (26.2)!\\\\n\\', \\'[20:39:33 WARN]: It is recommended that you update as soon as possible\\\\n\\', \\'[20:39:33 WARN]: https://papermc.io/downloads/paper\\\\n\\', \\'[20:39:33 WARN]: *************************************************************************************\\\\n\\', \\'[20:40:42 INFO]: VS_TEST_FAILED increment FAILED MISSING_VALUE\\\\n\\']')",
-  "recordedAt": "2026-09-16T11:41:45Z",
+  "healthBeforeGameplay": {
+    "a": {
+      "tps": "[21:26:43 INFO]: \u001b[33mTPS from last 1m, 5m, 15m: \u001b[0m\u001b[92m19.9\u001b[0m, \u001b[92m19.9\u001b[0m, \u001b[92m19.9\u001b[0m",
+      "msptRawLines": [
+        "[21:26:43 INFO]: \u001b[33mServer tick times \u001b[93m(\u001b[37mavg\u001b[93m/\u001b[37mmin\u001b[93m/\u001b[37mmax\u001b[93m)\u001b[33m from last 5s\u001b[37m,\u001b[33m 10s\u001b[37m,\u001b[33m 1m\u001b[93m:\u001b[0m\n",
+        "[21:26:43 INFO]: \u001b[33m\u25f4 \u001b[37m\u001b[92m2.2\u001b[37m/\u001b[92m0.2\u001b[37m/\u001b[91m138.1\u001b[93m, \u001b[92m1.5\u001b[37m/\u001b[92m0.2\u001b[37m/\u001b[91m138.1\u001b[93m, \u001b[92m1.9\u001b[37m/\u001b[92m0.2\u001b[37m/\u001b[91m254.6\u001b[0m\n"
+      ]
+    },
+    "b": {
+      "tps": "[21:26:43 INFO]: \u001b[33mTPS from last 1m, 5m, 15m: \u001b[0m\u001b[93m16.7\u001b[0m, \u001b[93m16.7\u001b[0m, \u001b[93m16.7\u001b[0m",
+      "msptRawLines": [
+        "[21:26:43 INFO]: \u001b[33mServer tick times \u001b[93m(\u001b[37mavg\u001b[93m/\u001b[37mmin\u001b[93m/\u001b[37mmax\u001b[93m)\u001b[33m from last 5s\u001b[37m,\u001b[33m 10s\u001b[37m,\u001b[33m 1m\u001b[93m:\u001b[0m\n",
+        "[21:26:43 INFO]: \u001b[33m\u25f4 \u001b[37m\u001b[92m28.5\u001b[37m/\u001b[92m1.4\u001b[37m/\u001b[91m199.0\u001b[93m, \u001b[92m28.5\u001b[37m/\u001b[92m1.4\u001b[37m/\u001b[91m199.0\u001b[93m, \u001b[92m28.5\u001b[37m/\u001b[92m1.4\u001b[37m/\u001b[91m199.0\u001b[0m\n"
+      ]
+    }
+  },
+  "healthAfterGameplay": {
+    "a": {
+      "tps": "[21:27:21 INFO]: \u001b[33mTPS from last 1m, 5m, 15m: \u001b[0m\u001b[92m19.5\u001b[0m, \u001b[92m19.6\u001b[0m, \u001b[92m19.6\u001b[0m",
+      "msptRawLines": [
+        "[21:27:22 INFO]: \u001b[33mServer tick times \u001b[93m(\u001b[37mavg\u001b[93m/\u001b[37mmin\u001b[93m/\u001b[37mmax\u001b[93m)\u001b[33m from last 5s\u001b[37m,\u001b[33m 10s\u001b[37m,\u001b[33m 1m\u001b[93m:\u001b[0m\n",
+        "[21:27:22 INFO]: \u001b[33m\u25f4 \u001b[37m\u001b[92m9.8\u001b[37m/\u001b[92m2.9\u001b[37m/\u001b[91m104.2\u001b[93m, \u001b[92m12.0\u001b[37m/\u001b[92m2.9\u001b[37m/\u001b[91m135.6\u001b[93m, \u001b[92m9.4\u001b[37m/\u001b[92m0.2\u001b[37m/\u001b[91m1673.9\u001b[0m\n"
+      ]
+    },
+    "b": {
+      "tps": "[21:27:22 INFO]: \u001b[33mTPS from last 1m, 5m, 15m: \u001b[0m\u001b[92m19.4\u001b[0m, \u001b[92m19.4\u001b[0m, \u001b[92m19.4\u001b[0m",
+      "msptRawLines": [
+        "[21:27:22 INFO]: \u001b[33mServer tick times \u001b[93m(\u001b[37mavg\u001b[93m/\u001b[37mmin\u001b[93m/\u001b[37mmax\u001b[93m)\u001b[33m from last 5s\u001b[37m,\u001b[33m 10s\u001b[37m,\u001b[33m 1m\u001b[93m:\u001b[0m\n",
+        "[21:27:22 INFO]: \u001b[33m\u25f4 \u001b[37m\u001b[92m1.4\u001b[37m/\u001b[92m0.6\u001b[37m/\u001b[92m10.3\u001b[93m, \u001b[92m13.8\u001b[37m/\u001b[92m0.6\u001b[37m/\u001b[91m1398.3\u001b[93m, \u001b[92m6.3\u001b[37m/\u001b[92m0.1\u001b[37m/\u001b[91m1398.3\u001b[0m\n"
+      ]
+    }
+  },
+  "healthScope": "Low-player functional smoke with JFR enabled; raw TPS/MSPT observations, not a performance guarantee",
+  "status": "PASS",
+  "recordedAt": "2026-09-16T12:28:09Z",
   "ownedProcessesTerminal": true
 }
