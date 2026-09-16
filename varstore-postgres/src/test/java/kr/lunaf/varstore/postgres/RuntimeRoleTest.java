@@ -1,6 +1,7 @@
 package kr.lunaf.varstore.postgres;
 
 import kr.lunaf.varstore.api.*;
+import kr.lunaf.varstore.api.events.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import java.sql.*;
@@ -39,6 +40,8 @@ class RuntimeRoleTest {
                     grant.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON vs_variables TO "+quoted(role));
                     grant.execute("GRANT SELECT, INSERT, UPDATE ON vs_operations TO "+quoted(role));
                     grant.execute("GRANT INSERT ON vs_admin_audit TO "+quoted(role));
+                    grant.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON vs_subscriptions, vs_outbox, vs_outbox_delivery TO "+quoted(role));
+                    grant.execute("GRANT USAGE ON SEQUENCE vs_outbox_event_id_seq TO "+quoted(role));
                     grant.execute("GRANT USAGE ON SEQUENCE vs_admin_audit_audit_id_seq TO "+quoted(role));
                 }
                 var settings=new PostgresSettings(url,role,rolePassword,"runtime-test","runtime","disable",true,2,
@@ -46,6 +49,7 @@ class RuntimeRoleTest {
                 UUID operation=UUID.randomUUID();
                 try(var runtime=new PostgresBackend(settings)) {
                     assertNotNull(runtime.initialize());
+                    var subscription=runtime.registerSubscription(new SubscriptionSpec("runtime-events","example",SubscriptionMode.EPHEMERAL,Duration.ofMinutes(1),Duration.ofDays(1)),deadline());
                     Target<Long> target=new Target<>(new Address("runtime-test","example",ScopeKind.NETWORK,"_",Owner.system("global"),"level"),ValueType.LONG);
                     var initial=runtime.<Long>write(target,WriteKind.SET,1L,0,null,UUID.randomUUID(),deadline());
                     assertEquals(1L,runtime.get(target,deadline()).orElseThrow().value());
@@ -55,6 +59,11 @@ class RuntimeRoleTest {
                     assertTrue(runtime.execute(plan,operation,deadline()).replayed());
                     assertEquals(2L,runtime.getAll(List.of(target),deadline()).get(target.address()).orElseThrow().value());
                     assertEquals(OperationStatus.State.COMPLETED,runtime.operation("example",operation,deadline()).state());
+                    var deliveries=runtime.claimEvents(subscription,10,Duration.ofSeconds(10),deadline());assertEquals(2,deliveries.size());
+                    for(var delivery:deliveries)assertTrue(runtime.acknowledge(subscription,delivery.event().eventId(),delivery.leaseToken(),deadline()));
+                    runtime.closeSubscription(subscription,deadline());
+                    assertEquals(1,runtime.scanKeys(target.address(),"lev",java.util.Optional.empty(),50,deadline()).keys().size());
+                    assertTrue(runtime.capacity(deadline()).containsKey("pendingDeliveriesInSample"));
                     runtime.probe(deadline());
                     assertTrue(runtime.diagnostics(deadline()).get("tableBytes")>0);
                 }

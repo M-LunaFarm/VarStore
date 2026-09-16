@@ -1,0 +1,5 @@
+name: VarStoreSkript
+version: '${version}'
+main: kr.lunaf.varstore.skript.VarStoreSkriptPlugin
+api-version: '1.21.11'
+depend: [VarStore, Skript]

@@ -10,8 +10,13 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 /** Bounded database admission and separate bounded callback delivery. No caller-runs I/O. */
-final class AsyncVarStore implements VarStore {
+final class AsyncVarStore implements VarStore, VarStoreExtensions {
     private final StoreConfig config;
+    private final LocalKeyRegistry definitions = new LocalKeyRegistry();
+    private final PendingWriteManager pending;
+    private final EventHub events;
+    private final CopyOnWriteArrayList<Consumer<Address>> invalidations = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Runnable> resyncs = new CopyOnWriteArrayList<>();
     private volatile PostgresBackend backend;
     private final ThreadPoolExecutor workers;
     private final ExecutorService completions;
@@ -46,6 +51,8 @@ final class AsyncVarStore implements VarStore {
         deliverySlots = new Semaphore(config.queueMaxRequests() + 2);
         completions = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().name("varstore-completion-", 0).factory());
         monitor = Executors.newSingleThreadScheduledExecutor(threads("health"));
+        pending = new PendingWriteManager(this);
+        events = new EventHub(this);
     }
     void start() {
         monitor.execute(this::probe);
@@ -95,9 +102,13 @@ final class AsyncVarStore implements VarStore {
             completions.execute(() -> {
                 try {
                     StoreState next = pendingState.getAndSet(null);
+                    if (next == StoreState.DEGRADED || next == StoreState.CLOSED) for (var callback : resyncs) {
+                        try { callback.run(); } catch (RuntimeException ignored) { }
+                    }
                     if (next != null) for (var listener : listeners) {
                         try { listener.accept(next); } catch (RuntimeException ignored) { /* consumer isolation */ }
                     }
+                    if(next==StoreState.CLOSED){listeners.clear();invalidations.clear();resyncs.clear();}
                 } finally {
                     stateDelivery.set(false);
                     if (pendingState.get() != null) dispatchState();
@@ -105,10 +116,41 @@ final class AsyncVarStore implements VarStore {
             });
         } catch (RejectedExecutionException ignored) { stateDelivery.set(false); }
     }
+    <T> CompletionStage<T> extension(long bytes, BiFunction<PostgresBackend,Long,T> work) {
+        return checked(null, () -> submit(bytes,null,false,d -> work.apply(backend,d)));
+    }
+    @Override public KeyRegistry definitions() { return definitions; }
+    @Override public PendingWrites pendingWrites() { return pending; }
+    @Override public kr.lunaf.varstore.api.events.EventService events() { return events; }
+    @Override public CompletionStage<Map<String,Long>> capacity() { return extension(4096,(b,d)->b.capacity(d)); }
+    @Override public CompletionStage<KeyPage> scanKeys(Data data,String prefix,Optional<String> cursor,int limit) {
+        return checked(null, () -> {
+            Address anchor=Objects.requireNonNull(data).address(VarKey.stringKey("scan-anchor"));
+            if(!anchor.networkId().equals(config.storage().networkId()) || limit<1 || limit>200)throw failure(ErrorCode.INVALID_ARGUMENT,null);
+            return extension(512L*limit,(b,d)->b.scanKeys(anchor,prefix,cursor,limit,d));
+        });
+    }
+    @Override public AutoCloseable onInvalidation(Consumer<Address> callback) { return addHook(invalidations,callback); }
+    @Override public AutoCloseable onResync(Runnable callback) { return addHook(resyncs,callback); }
+    private <T> AutoCloseable addHook(CopyOnWriteArrayList<T> list,T hook) {
+        synchronized(list) {
+            if(closed.get())throw failure(ErrorCode.SHUTTING_DOWN,null);
+            if(list.size()>=1024)throw failure(ErrorCode.OVERLOADED,null);
+            list.add(Objects.requireNonNull(hook));
+        }
+        return ()->list.remove(hook);
+    }
+    private <T> CompletionStage<T> invalidateAfter(CompletionStage<T> stage,Collection<Address> addresses) {
+        return stage.whenComplete((v,e)->{
+            Throwable cause=e;while(cause instanceof CompletionException)cause=cause.getCause();
+            if(e==null || cause instanceof VarStoreException failure && failure.code()==ErrorCode.UNKNOWN_COMMIT_OUTCOME)
+                for(Address address:addresses)for(var callback:invalidations)try{callback.accept(address);}catch(RuntimeException ignored){}
+        });
+    }
     @Override public StoreState state() { return state.get(); }
     @Override public Optional<ErrorCode> lastError() { return Optional.ofNullable(lastError); }
     @Override public CompletionStage<Void> ready() { return ready.minimalCompletionStage(); }
-    @Override public AutoCloseable onStateChange(Consumer<StoreState> listener) { listeners.add(Objects.requireNonNull(listener)); return () -> listeners.remove(listener); }
+    @Override public AutoCloseable onStateChange(Consumer<StoreState> listener) { return addHook(listeners,listener); }
     @Override public StoreMetrics metrics() {
         int n = (int) Math.min(sampleIndex.get(), latencies.length());
         long[] samples = new long[n]; for (int i = 0; i < n; i++) samples[i] = latencies.get(i);
@@ -209,7 +251,7 @@ final class AsyncVarStore implements VarStore {
                 Objects.requireNonNull(plan);Objects.requireNonNull(id);
                 for (Mutation m:plan.mutations()) checkNamespace(m.target().address());
                 for (Condition c:plan.conditions()) checkNamespace(c.target().address());
-                return submit(plan.estimatedBytes(),id,true,d -> backend.execute(plan,id,d));
+                return invalidateAfter(submit(plan.estimatedBytes(),id,true,d -> backend.execute(plan,id,d)),plan.mutations().stream().map(m->m.target().address()).distinct().toList());
             });
         }
         private void checkNamespace(Address address) { if (!address.networkId().equals(config.storage().networkId()) || !address.namespace().equals(name)) throw failure(ErrorCode.INVALID_ARGUMENT,null); }
@@ -246,7 +288,7 @@ final class AsyncVarStore implements VarStore {
                 Objects.requireNonNull(id); Target<?> t=target(key);
                 if (kind==WriteKind.SET || kind==WriteKind.SET_IF_ABSENT || kind==WriteKind.COMPARE_AND_SET) key.type().validate(value);
                 long bytes=1024+(value instanceof String s ? s.getBytes(StandardCharsets.UTF_8).length:32);
-                return submit(bytes,id,true,d -> backend.write(t,kind,value,delta,version,id,d));
+                return invalidateAfter(submit(bytes,id,true,d -> backend.write(t,kind,value,delta,version,id,d)),List.of(t.address()));
             });
         }
         @Override public <T> CompletionStage<WriteReceipt<T>> set(VarKey<T> key,T value,UUID id) { return write(key,WriteKind.SET,value,0,null,id); }
@@ -259,6 +301,7 @@ final class AsyncVarStore implements VarStore {
     }
     @Override public void close() {
         if (!closed.compareAndSet(false, true)) return;
+        events.close();pending.close();definitions.close();
         synchronized(admission) { transition(StoreState.DRAINING);workers.shutdown(); }
         monitor.shutdownNow();
         long until=System.nanoTime()+config.shutdownDrainTimeout().toNanos();

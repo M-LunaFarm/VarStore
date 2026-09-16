@@ -1,0 +1,6 @@
+name: VarStorePlaceholders
+version: '${version}'
+main: kr.lunaf.varstore.placeholder.VarStorePlaceholderPlugin
+api-version: '1.21.11'
+depend: [VarStore, PlaceholderAPI]
+softdepend: [VarStorePreferences, VarStoreRewards, VarStoreQuests]

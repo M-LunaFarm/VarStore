@@ -1,0 +1,48 @@
+{
+  "schemaBefore": 1,
+  "backupBytes": 55116909,
+  "backupSha256": "68452ee5e8825a513230217b08fc107640df9b550997c2495e8d8f8c687f248d",
+  "before": {
+    "vs_networks": {
+      "rows": 67,
+      "rowJsonMd5Aggregate": "994f3e8f3d622a57a3d87f134c901efd"
+    },
+    "vs_variables": {
+      "rows": 300188,
+      "rowJsonMd5Aggregate": "f07f519ee0b7a232a8b86d2bb09ebce2"
+    },
+    "vs_operations": {
+      "rows": 20153,
+      "rowJsonMd5Aggregate": "acf91f0817f58f0beda0af64f2566d7f"
+    },
+    "vs_admin_audit": {
+      "rows": 27,
+      "rowJsonMd5Aggregate": "9d05ba6097fcc53e2e4e9e10970c662a"
+    },
+    "v1History": "{\"version\":1,\"checksum\":\"12df16f1ded170b3f080debd26a6991040a91f0ddc8188d80903e78ca1aaa484\",\"catalog_checksum\":\"5ce19e9cd3b17b8b3ad6bd2af84bd36dada6ff9fdb7a3d1af13c607b07e66e5f\",\"applied_at\":\"2026-09-15T12:08:38.578484+00:00\",\"tool_version\":\"1.0.0\"}"
+  },
+  "upgradeSeconds": 0.935,
+  "after": {
+    "vs_networks": {
+      "rows": 67,
+      "rowJsonMd5Aggregate": "994f3e8f3d622a57a3d87f134c901efd"
+    },
+    "vs_variables": {
+      "rows": 300188,
+      "rowJsonMd5Aggregate": "f07f519ee0b7a232a8b86d2bb09ebce2"
+    },
+    "vs_operations": {
+      "rows": 20153,
+      "rowJsonMd5Aggregate": "acf91f0817f58f0beda0af64f2566d7f"
+    },
+    "vs_admin_audit": {
+      "rows": 27,
+      "rowJsonMd5Aggregate": "9d05ba6097fcc53e2e4e9e10970c662a"
+    },
+    "v1History": "{\"version\":1,\"checksum\":\"12df16f1ded170b3f080debd26a6991040a91f0ddc8188d80903e78ca1aaa484\",\"catalog_checksum\":\"5ce19e9cd3b17b8b3ad6bd2af84bd36dada6ff9fdb7a3d1af13c607b07e66e5f\",\"applied_at\":\"2026-09-15T12:08:38.578484+00:00\",\"tool_version\":\"1.0.0\"}"
+  },
+  "schemaAfter": 2,
+  "status": "PASS",
+  "oldRuntimeStartup": "REJECTED",
+  "recordedAt": "2026-09-16T11:48:01Z"
+}

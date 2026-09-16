@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import kr.lunaf.varstore.api.*;
 import kr.lunaf.varstore.paper.PaperVarStore;
+import kr.lunaf.varstore.paper.PaperSessions;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -21,23 +22,27 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class RewardsPlugin extends JavaPlugin implements Listener {
     private static final VarKey<Long> DAY = VarKey.longKey("last-claim-utc-day");
     private static final VarKey<Long> POINTS = VarKey.longKey("reward-points");
-    private final Map<UUID, UUID> sessions = new HashMap<>();
+    private PaperSessions sessions;
     private VarStore.Namespace namespace;
+    private VarStoreExtensions extensions;
 
     @Override public void onEnable() {
         PaperVarStore registrations = getServer().getServicesManager().load(PaperVarStore.class);
         if (registrations == null) throw new IllegalStateException("VarStore service missing");
         namespace = registrations.register(this, "varstorerewards");
+        extensions = java.util.Objects.requireNonNull(getServer().getServicesManager().load(VarStoreExtensions.class));
+        sessions = new PaperSessions(this);
+        sessions.own(java.util.Objects.requireNonNull(getServer().getServicesManager().load(PaperVarStore.class)).define(this, "varstorerewards", new KeyDefinition<>(POINTS, 0L, "Database reward point balance", false, CachePolicy.DISPLAY_ONLY, 1)));
+        sessions.own(registrations.define(this, "varstorerewards", new KeyDefinition<>(DAY, -1L, "Last UTC reward claim day", true, CachePolicy.DISABLED, 1)));
         getServer().getPluginManager().registerEvents(this, this);
         java.util.Objects.requireNonNull(getCommand("dailyreward")).setExecutor(this);
     }
-    @EventHandler public void left(PlayerQuitEvent event) { sessions.remove(event.getPlayer().getUniqueId()); }
 
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) { sender.sendMessage("This command requires a player."); return true; }
         if (args.length > 1) return false;
         UUID id = player.getUniqueId();
-        UUID session = sessions.computeIfAbsent(id, unused -> UUID.randomUUID());
+        PaperSessions.Session session = sessions.capture(id);
         VarStore.Data data = namespace.network().player(id);
         if (args.length == 1 && args[0].equals("balance")) {
             data.get(POINTS).whenComplete((balance, error) -> online(id, session, current -> current.sendMessage(
@@ -59,10 +64,11 @@ public final class RewardsPlugin extends JavaPlugin implements Listener {
         // Stable initialization IDs and stable day-based claim IDs survive restart and server transfer.
         CompletionStage<TransactionReceipt> claim = initialize(data, DAY, -1L, operationId(id, "initialize-day"))
                 .thenCompose(unused -> initialize(data, POINTS, 0L, operationId(id, "initialize-points")))
-                .thenCompose(unused -> namespace.execute(TransactionPlan.builder()
+                .thenCompose(unused -> extensions.pendingWrites().execute("varstorerewards", TransactionPlan.builder()
                         .requireLongRange(data.target(DAY), -1L, day - 1)
                         .set(data.target(DAY), day)
-                        .increment(data.target(POINTS), 1L).build(), operation));
+                        .increment(data.target(POINTS), 1L).build(), operation, PendingWrites.Policy.defaults()))
+                .thenApply(result -> result.receipt().orElseThrow(() -> new VarStoreException(ErrorCode.UNKNOWN_COMMIT_OUTCOME, "Reward needs reconciliation", operation)));
         claim.whenComplete((receipt, error) -> online(id, session, current -> {
             if (error != null) {
                 current.sendMessage("Reward unresolved/failed. Run " + lookup + " to inspect the original operation; retry today keeps the same ID.");
@@ -85,12 +91,8 @@ public final class RewardsPlugin extends JavaPlugin implements Listener {
     static UUID operationId(UUID player, String businessEvent) {
         return UUID.nameUUIDFromBytes(("varstore-rewards/v1/" + player + "/" + businessEvent).getBytes(StandardCharsets.UTF_8));
     }
-    private void online(UUID id, UUID session, java.util.function.Consumer<Player> action) {
-        try { getServer().getScheduler().runTask(this, () -> {
-            if (!isEnabled() || !session.equals(sessions.get(id))) return;
-            Player player = getServer().getPlayer(id);
-            if (player != null && player.isOnline()) action.accept(player);
-        }); } catch (org.bukkit.plugin.IllegalPluginAccessException ignored) { }
+    private void online(UUID id, PaperSessions.Session session, java.util.function.Consumer<Player> action) {
+        sessions.run(session, action);
     }
-    @Override public void onDisable() { sessions.clear(); }
+    @Override public void onDisable() { if (sessions != null) sessions.close(); }
 }

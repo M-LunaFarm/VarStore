@@ -1,0 +1,61 @@
+# Pinned Skript 2.16.1. Local list fields: status/value/error/operation/cursor/keys::*.
+# Every storage effect delays continuation; event cancellation after it is too late.
+command /vstest:
+    trigger:
+        varstore set "STRING" key "test/string" to "hello" in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@STRING_ID@" into {_r::*}
+        if {_r::status} is not "APPLIED":
+            send "VS_TEST_FAILED string %{_r::status}% %{_r::error}%" to console
+            stop
+        varstore read "STRING" key "test/string" in namespace "varstoreskript" scope "network" owner "system:addon-test" into {_r::*}
+        if {_r::value} is not "hello":
+            send "VS_TEST_FAILED string read" to console
+            stop
+        varstore set "LONG" key "test/long" to 40 in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@LONG_ID@" into {_r::*}
+        if {_r::status} is not "APPLIED":
+            send "VS_TEST_FAILED long set %{_r::status}% %{_r::error}%" to console
+            stop
+        varstore add 2 to key "test/long" in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@ADD_ID@" into {_r::*}
+        if {_r::value} is not 42:
+            send "VS_TEST_FAILED increment %{_r::status}% %{_r::error}%" to console
+            stop
+        varstore set "BOOLEAN" key "test/bool" to true in namespace "varstoreskript" scope "server:a" owner "system:addon-test" operation "@BOOL_ID@" into {_r::*}
+        varstore read "BOOLEAN" key "test/bool" in namespace "varstoreskript" scope "server:a" owner "system:addon-test" into {_r::*}
+        if {_r::value} is not true:
+            send "VS_TEST_FAILED boolean" to console
+            stop
+        varstore set "UUID" key "test/uuid" to "00112233-4455-6677-8899-aabbccddeeff" in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@UUID_ID@" into {_r::*}
+        varstore read "UUID" key "test/uuid" in namespace "varstoreskript" scope "network" owner "system:addon-test" into {_r::*}
+        if "%{_r::value}%" is not "00112233-4455-6677-8899-aabbccddeeff":
+            send "VS_TEST_FAILED uuid" to console
+            stop
+        varstore read "STRING" key "missing" in namespace "varstoreskript" scope "network" owner "system:addon-test" into {_r::*}
+        if {_r::status} is not "ABSENT":
+            send "VS_TEST_FAILED absence" to console
+            stop
+        varstore read "LONG" key "test/string" in namespace "varstoreskript" scope "network" owner "system:addon-test" into {_r::*}
+        if {_r::status} is not "FAILED":
+            send "VS_TEST_FAILED failure hidden" to console
+            stop
+        if {_r::error} is not "TYPE_MISMATCH":
+            send "VS_TEST_FAILED error code %{_r::error}%" to console
+            stop
+        varstore keys prefix "test/" in namespace "varstoreskript" scope "network" owner "system:addon-test" cursor "" limit 2 into {_r::*}
+        if size of {_r::keys::*} is not 2:
+            send "VS_TEST_FAILED first page" to console
+            stop
+        set {_cursor} to {_r::cursor}
+        varstore keys prefix "test/" in namespace "varstoreskript" scope "network" owner "system:addon-test" cursor {_cursor} limit 2 into {_r::*}
+        if size of {_r::keys::*} is not 1:
+            send "VS_TEST_FAILED second page" to console
+            stop
+        send "VS_SCALAR_LIST_PASS" to console
+command /vsstale:
+    trigger:
+        send "VS_STALE_SUBMITTED" to console
+        varstore set "LONG" key "delayed" to 2 in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@STALE_ID@" guarded by player into {_r::*}
+        send "VS_STALE_CONTINUED" to console
+command /vsunload:
+    trigger:
+        send "VS_UNLOAD_SUBMITTED" to console
+        varstore set "LONG" key "delayed" to 3 in namespace "varstoreskript" scope "network" owner "system:addon-test" operation "@UNLOAD_ID@" into {_r::*}
+        send "VS_UNLOAD_CONTINUED" to console

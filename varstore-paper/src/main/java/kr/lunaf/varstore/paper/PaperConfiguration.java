@@ -18,7 +18,6 @@ final class PaperConfiguration {
         exact(config, "storage.durability-check", "strict");
         exact(config, "operations.full-result-retention", "7d");
         exact(config, "operations.dedup-marker-retention", "forever");
-        if (config.getBoolean("cache.enabled")) throw new IllegalArgumentException("Cache is not supported");
         fixedLimit(config, "limits.max-value-bytes", 16384);
         fixedLimit(config, "limits.max-batch-read-keys", 64);
         fixedLimit(config, "limits.max-transaction-keys", 16);

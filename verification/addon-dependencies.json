@@ -1,0 +1,19 @@
+{
+  "verifiedAt": "2026-09-16",
+  "minecraft": "Paper1.21.11",
+  "Skript": {
+    "version": "2.16.1",
+    "officialRelease": "https://github.com/SkriptLang/Skript/releases/tag/2.16.1",
+    "officialCompatibility": "Paper1.21.4 through26.2",
+    "sha256": "8357a348b27cd8a2cf749998e4ad14bd1dca3160026bd3042d6d17cfb4c98a70",
+    "apiReference": "https://github.com/SkriptLang/Skript/blob/2.16.1/src/main/java/ch/njol/skript/util/AsyncEffect.java",
+    "implementation": "CompletionStage driven custom Effect.walk; no blocking AsyncEffect execute"
+  },
+  "PlaceholderAPI": {
+    "version": "2.12.3",
+    "officialRelease": "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/tag/2.12.3",
+    "compatibilityReference": "https://hangar.papermc.io/HelpChat/PlaceholderAPI/versions",
+    "sha256": "fde03259f5af6938f3c33eeb4d814000a1adabf1d2304ce14970be81f609a437",
+    "apiReference": "https://wiki.placeholderapi.com/developers/creating-a-placeholderexpansion/"
+  }
+}

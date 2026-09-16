@@ -29,6 +29,8 @@ operations:
   dedup-marker-retention: forever
 cache:
   enabled: false
+  max-entries: 10000
+  max-bytes: 16777216
 # Plugin name -> additional explicitly allowed namespaces; own lowercase name is allowed.
 # shared-namespaces:
 #   MyPlugin: [shared]

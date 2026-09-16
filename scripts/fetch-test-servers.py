@@ -11,6 +11,10 @@ ARTIFACTS = (
      '4270d174c64516a27d5e8be3775ab19182f2ce2153635212af957d6feef7a604'),
     ('bungee-modules/cmd_server.jar', 'https://hub.spigotmc.org/jenkins/job/BungeeCord/2093/artifact/module/cmd-server/target/cmd_server.jar',
      '7745b88cada6c3eeffbbd2d513fc4030f09fa5d6d258da489e945d1709228242'),
+    ('skript.jar', 'https://github.com/SkriptLang/Skript/releases/download/2.16.1/Skript-2.16.1.jar',
+     '8357a348b27cd8a2cf749998e4ad14bd1dca3160026bd3042d6d17cfb4c98a70'),
+    ('placeholderapi.jar', 'https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.12.3/PlaceholderAPI-2.12.3.jar',
+     'fde03259f5af6938f3c33eeb4d814000a1adabf1d2304ce14970be81f609a437'),
 )
 
 def digest(path):
@@ -21,7 +25,7 @@ def digest(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--no-bootstrap', action='store_true', help='Only download and verify the three pinned artifacts')
+    parser.add_argument('--no-bootstrap', action='store_true', help='Only download and verify the pinned artifacts')
     default_java = os.environ.get('VARSTORE_TEST_JAVA') or (str(pathlib.Path(os.environ['JAVA_HOME']) / 'bin/java') if os.environ.get('JAVA_HOME') else shutil.which('java'))
     parser.add_argument('--java', default=default_java, help='Java executable for Paper patch-only cache preparation (use Java21)')
     args = parser.parse_args()

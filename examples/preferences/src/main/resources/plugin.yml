@@ -7,4 +7,4 @@ author: LeeSeungmin
 commands:
   preferences:
     description: Persist network-wide chat visibility
-    usage: /preferences [on|off|toggle]
+    usage: /preferences [on|off|toggle|transfer <server>]

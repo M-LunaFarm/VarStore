@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": 1,
+  "recordedAt": "2026-09-15T12:39:44.489404+00:00",
+  "sourceTreeSha256": "2eafd4910faccd69659c481c3be3bf367a051a44f101821a1acd71f82506db92",
+  "artifacts": [
+    {
+      "path": "examples/build/libs/examples-1.0.0.jar",
+      "bytes": 261,
+      "sha256": "b0558b086e02dae3edb8a9b979ee6e4cf5c3103bdef85bec7e4a866d22bda802"
+    },
+    {
+      "path": "varstore-api/build/libs/varstore-api-1.0.0.jar",
+      "bytes": 40085,
+      "sha256": "5f5803a808883f1843e909a5291d08f2d7b88f8b714a484ba8c94627d4dff70d"
+    },
+    {
+      "path": "varstore-core/build/libs/varstore-core-1.0.0.jar",
+      "bytes": 23563,
+      "sha256": "3e70aaa811d2f0f20a327ddc459d2340b0a402a0daf75ffb20b91d542b677fc8"
+    },
+    {
+      "path": "varstore-paper/build/libs/varstore-paper-1.0.0.jar",
+      "bytes": 1684765,
+      "sha256": "91df7fae605a5d55a08c163e150022f153b52053f1011786621fcf755c6c80c1"
+    },
+    {
+      "path": "varstore-postgres/build/libs/varstore-postgres-1.0.0.jar",
+      "bytes": 38454,
+      "sha256": "73ecd01ae221cd7a0ca345a9647e33e56787dbc1a08e794abf537ec3c64b4933"
+    },
+    {
+      "path": "varstore-testkit/build/libs/varstore-testkit-1.0.0.jar",
+      "bytes": 43967,
+      "sha256": "71ad7f3ec48bbe825fbec3e993ff18c252b95de166f064e15a05a8787e401a6c"
+    },
+    {
+      "path": "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.0.0.jar",
+      "bytes": 14223,
+      "sha256": "a257db467d3e6a58e24b918a988c9dd999d1dea1f55ab979752deda575e1b476"
+    },
+    {
+      "path": "varstore-tools/build/libs/varstore-tools-1.0.0.jar",
+      "bytes": 1665718,
+      "sha256": "025579f4c3f9f9e3d287e6210c1371968e3eb30b03ab94fe7abff1fdf20a1adb"
+    },
+    {
+      "path": "examples/preferences/build/libs/preferences-1.0.0.jar",
+      "bytes": 6706,
+      "sha256": "84a8327580d9d1b5b3bcdfc6af4c987a9da6bad9558c167fc283755d6c2247d1"
+    },
+    {
+      "path": "examples/rewards/build/libs/rewards-1.0.0.jar",
+      "bytes": 7075,
+      "sha256": "18a5a8187d092340d533d1cf7a781b376128fbce87ed9b610a04f1e10f860afd"
+    }
+  ],
+  "serverJarChecks": {
+    "relocatedJdbcAndPool": true,
+    "versionMetadata": true,
+    "examplesExcludeApiClasses": true,
+    "apiSourcesAndJavadocPresent": true
+  },
+  "implementationCommit": "234e7f19ef710bfcc3c02630a307132e586bc15c"
+}

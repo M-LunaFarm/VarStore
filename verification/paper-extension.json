@@ -1,0 +1,29 @@
+{
+  "network": "papersmoke-207020e1",
+  "paper": "1.21.11 build 132",
+  "bungee": "2093",
+  "java": "21",
+  "postgres": "18",
+  "scope": "loopback offline-auth integration only",
+  "checks": {},
+  "artifactSha256": {
+    "paper.jar": "5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba",
+    "bungee.jar": "4270d174c64516a27d5e8be3775ab19182f2ce2153635212af957d6feef7a604",
+    "varstore-paper": "8de705cb823144a126e8862c652b3209a45f6c398a37d085fa26d390eabc57bf",
+    "varstore-tools": "4f12179064ef878253b62e3802942f38f44b54f270307ae950dcaa88e103371c",
+    "examples/preferences": "e9e520efed57526f380e0d9f37b9ea2a527a92d25d89e96495d0a117bcc642e7",
+    "examples/rewards": "b9e57cbc89cf0d0676cc0e18a83f0e67508fa1603bedf0abfe212549c6bbba90",
+    "examples/quests": "7954a491c702b1403b031baca1819e9003e82e5e425a5c332c27d145f09ea9d1",
+    "varstore-skript": "c2abd377d066f124646610f8257764c68006b082690a6fac907bddf53a7c304d",
+    "varstore-placeholderapi": "b6c023f291d031fce195d8159aacaa49746ba5699fef02c08dc37d9e0f4e32e3",
+    "skript": "8357a348b27cd8a2cf749998e4ad14bd1dca3160026bd3042d6d17cfb4c98a70",
+    "placeholderapi": "fde03259f5af6938f3c33eeb4d814000a1adabf1d2304ce14970be81f609a437"
+  },
+  "mineflayer": "4.39.0",
+  "skript": "2.16.1",
+  "placeholderapi": "2.12.3",
+  "status": "FAIL",
+  "error": "AssertionError('a timed out waiting for VS_SCALAR_LIST_PASS: [\\'[20:39:33 INFO]: Done (61.593s)! For help, type \"help\"\\\\n\\', \\'[20:39:33 WARN]: *************************************************************************************\\\\n\\', \\'[20:39:33 WARN]: You are running the latest build for your Minecraft version (1.21.11)\\\\n\\', \\'[20:39:33 WARN]: However, you are 4 release(s) behind the latest stable release (26.2)!\\\\n\\', \\'[20:39:33 WARN]: It is recommended that you update as soon as possible\\\\n\\', \\'[20:39:33 WARN]: https://papermc.io/downloads/paper\\\\n\\', \\'[20:39:33 WARN]: *************************************************************************************\\\\n\\', \\'[20:40:42 INFO]: VS_TEST_FAILED increment FAILED MISSING_VALUE\\\\n\\']')",
+  "recordedAt": "2026-09-16T11:41:45Z",
+  "ownedProcessesTerminal": true
+}

@@ -18,7 +18,12 @@ required = {'kr.lunaf.varstore.api.ApiContractTest', 'kr.lunaf.varstore.core.Pos
             'kr.lunaf.varstore.postgres.PostgresContractTest', 'kr.lunaf.varstore.postgres.RuntimeRoleTest',
             'kr.lunaf.varstore.postgres.DeadlockRetryTest',
             'kr.lunaf.varstore.postgres.PostgresSettingsTest', 'kr.lunaf.varstore.paper.AdminPlanTest',
-            'kr.lunaf.varstore.paper.ConfirmationTokensTest'}
+            'kr.lunaf.varstore.paper.ConfirmationTokensTest',
+            'kr.lunaf.varstore.core.ExtensionIntegrationTest', 'kr.lunaf.varstore.core.EventHubLifecycleTest', 'kr.lunaf.varstore.core.LocalKeyRegistryTest',
+            'kr.lunaf.varstore.core.PendingWriteManagerTest', 'kr.lunaf.varstore.postgres.ExtensionContractTest',
+            'kr.lunaf.varstore.cache.DisplayCacheTest', 'kr.lunaf.varstore.codec.CodecAdapterTest',
+            'kr.lunaf.varstore.tools.CsvDryRunTest', 'kr.lunaf.varstore.paper.PaperSessionsTest',
+            'kr.lunaf.varstore.paper.TrackedWritesTest'}
 passed = required <= {suite['suite'] for suite in suites} and all(
     suite['tests'] > 0 and not any(suite[key] for key in ('failures', 'errors', 'skipped')) for suite in suites)
 digest = hashlib.sha256()

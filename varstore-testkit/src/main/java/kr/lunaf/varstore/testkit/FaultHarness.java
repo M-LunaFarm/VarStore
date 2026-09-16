@@ -20,26 +20,30 @@ public final class FaultHarness {
         String password=System.getenv().getOrDefault("VARSTORE_TEST_DB_PASSWORD","varstore-test");
         String network="faulttest";
         try(var c=DriverManager.getConnection(url,user,password)) {SchemaMigrator.migrate(c,network);}
-        if(mode.equals("commit-response")) {
+        if(mode.equals("commit-response")||mode.equals("pre-commit")) {
+            boolean beforeCommit=mode.equals("pre-commit");
             String proxy=System.getenv().getOrDefault("VARSTORE_FAULT_JDBC_URL","jdbc:postgresql://127.0.0.1:25433/varstore");
             try(VarStore store=open(proxy,user,password,network)) {
                 store.ready().toCompletableFuture().get(20,TimeUnit.SECONDS);
                 var data=store.namespace("fault").network().system("global");var key=VarKey.longKey("count/"+UUID.randomUUID());
                 await(data.set(key,0L));UUID id=UUID.randomUUID();
                 HttpClient client=HttpClient.newHttpClient();
-                client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:25434/arm")).POST(HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofString());
+                client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:25434/"+(beforeCommit?"arm-before-commit":"arm"))).POST(HttpRequest.BodyPublishers.noBody()).build(),HttpResponse.BodyHandlers.ofString());
                 boolean unknown=false;
                 try {await(data.increment(key,1,id));}
                 catch(ExecutionException e) { System.out.println("FAULT_OBSERVED="+e.getCause()); unknown=e.getCause() instanceof VarStoreException v && v.code()==ErrorCode.UNKNOWN_COMMIT_OUTCOME;}
                 if(!unknown)throw new AssertionError("Expected UNKNOWN_COMMIT_OUTCOME from dropped COMMIT response");
                 // Independent direct DB observation establishes actual commit before replay.
                 try(var c=DriverManager.getConnection(url,user,password);var s=c.prepareStatement("SELECT long_value FROM vs_variables WHERE network_id=? AND namespace='fault' AND variable_key=?")) {
-                    s.setString(1,network);s.setString(2,key.name());try(var r=s.executeQuery()){if(!r.next()||r.getLong(1)!=1)throw new AssertionError("Original commit not visible");}
+                    s.setString(1,network);s.setString(2,key.name());try(var r=s.executeQuery()){if(!r.next()||r.getLong(1)!=(beforeCommit?0:1))throw new AssertionError("Independent database value does not match injected commit boundary");}
                 }
+                assertOutboxCount(url,user,password,network,id,beforeCommit?0:1);
                 awaitHealthy(store);
+                if(beforeCommit&&await(store.namespace("fault").operation(id)).state()!=OperationStatus.State.NOT_OBSERVED_YET)throw new AssertionError("Aborted operation unexpectedly persisted");
                 var receipt=await(data.increment(key,1,id));
-                if(!receipt.replayed()||await(data.get(key)).orElseThrow()!=1L)throw new AssertionError("Replay changed value");
-                System.out.println("{\"test\":\"T07\",\"passed\":true,\"fault\":\"actual COMMIT response bytes dropped\",\"value\":1}");
+                if(receipt.replayed()==beforeCommit||await(data.get(key)).orElseThrow()!=1L)throw new AssertionError("Replay changed value");
+                assertOutboxCount(url,user,password,network,id,1);
+                System.out.println("{\"test\":\""+(beforeCommit?"T07_PRE_COMMIT":"T07")+"\",\"passed\":true,\"fault\":\""+(beforeCommit?"actual backend connection closed before COMMIT forwarding":"actual COMMIT response bytes dropped")+"\",\"value\":1,\"outbox_events_before_retry\":"+(beforeCommit?0:1)+",\"outbox_events_after_retry\":1}");
             }
         } else if (mode.equals("recovery")) {
             try (VarStore old = open(url,user,password,network)) {
@@ -71,6 +75,11 @@ public final class FaultHarness {
                 System.out.println("{\"mode\":\""+mode+"\",\"passed\":true}");
             }
         } else throw new IllegalArgumentException("Unknown mode");
+    }
+    private static void assertOutboxCount(String url,String user,String password,String network,UUID operation,int expected)throws SQLException {
+        try(var connection=DriverManager.getConnection(url,user,password);var statement=connection.prepareStatement("SELECT count(*) FROM vs_outbox WHERE network_id=? AND namespace='fault' AND operation_id=?")) {
+            statement.setString(1,network);statement.setObject(2,operation);try(var result=statement.executeQuery()){result.next();if(result.getLong(1)!=expected)throw new AssertionError("Unexpected outbox event count at actual commit boundary");}
+        }
     }
     private static VarStore open(String url,String user,String password,String network) {
         return StoreFactory.open(StoreConfig.defaults(new PostgresSettings(url,user,password,network,"fault-runner","disable",true,4,Duration.ofSeconds(1),Duration.ofMillis(500),Duration.ofMillis(1500))));

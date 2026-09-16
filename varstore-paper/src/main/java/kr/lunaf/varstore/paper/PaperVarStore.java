@@ -4,7 +4,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import kr.lunaf.varstore.api.VarStore;
+import kr.lunaf.varstore.api.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
@@ -19,6 +19,12 @@ public final class PaperVarStore {
         this.plugins = plugins;
         this.shared = shared.entrySet().stream().collect(Collectors.toUnmodifiableMap(
                 Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
+    }
+
+    /** Own metadata registrations with the consumer's lifecycle helper. */
+    public AutoCloseable define(Plugin consumer, String namespace, KeyDefinition<?> definition) {
+        register(consumer, namespace);
+        return ((VarStoreExtensions) store).definitions().register(namespace, definition);
     }
 
     public VarStore.Namespace register(Plugin consumer, String namespace) {

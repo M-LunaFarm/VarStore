@@ -4,10 +4,12 @@ plugins {
 }
 allprojects {
     group = "kr.lunaf.varstore"
-    version = "1.0.0"
+    version = "1.3.0"
     repositories {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.skriptlang.org/releases")
+        maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     }
 }
 subprojects {
@@ -41,10 +43,10 @@ project(":varstore-postgres") {
     }
 }
 project(":varstore-core") {
-    dependencies { "api"(project(":varstore-api")); "implementation"(project(":varstore-postgres")); "testImplementation"(project(":varstore-testkit")) }
+    dependencies { "api"(project(":varstore-api")); "implementation"(project(":varstore-postgres")); "testImplementation"(project(":varstore-testkit")); "testImplementation"(project(":varstore-cache")) }
 }
 project(":varstore-testkit") {
-    dependencies { "api"(project(":varstore-api")); "implementation"(project(":varstore-core")); "implementation"(project(":varstore-postgres")) }
+    dependencies { "api"(project(":varstore-api")); "implementation"(project(":varstore-core")); "implementation"(project(":varstore-postgres")); "implementation"(project(":varstore-cache")) }
     tasks.register<JavaExec>("faultHarness") {
         classpath = project.extensions.getByType<SourceSetContainer>()["main"].runtimeClasspath
         mainClass.set("kr.lunaf.varstore.testkit.FaultHarness")
@@ -74,7 +76,12 @@ listOf(":varstore-paper", ":varstore-tools").forEach { name ->
     }
 }
 project(":varstore-paper") {
-    dependencies { "compileOnly"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT") }
+    dependencies {
+        "compileOnly"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+        "implementation"(project(":varstore-cache"))
+        "implementation"(project(":varstore-codec"))
+        "testImplementation"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    }
     tasks.withType<ProcessResources>().configureEach { filesMatching("plugin.yml") { expand("version" to project.version) } }
     tasks.withType<Jar>().configureEach { manifest.attributes["paperweight-mappings-namespace"] = "mojang" }
 }
@@ -86,9 +93,26 @@ project(":varstore-testkit-paper") {
     tasks.withType<ProcessResources>().configureEach { filesMatching("plugin.yml") { expand("version" to project.version) } }
     tasks.withType<Jar>().configureEach { manifest.attributes["paperweight-mappings-namespace"] = "mojang" }
 }
-listOf(":examples:preferences", ":examples:rewards").forEach { name ->
+listOf(":examples:preferences", ":examples:rewards", ":examples:quests", ":examples:structured").forEach { name ->
     project(name) {
-        dependencies { "compileOnly"(project(":varstore-api")); "compileOnly"(project(":varstore-paper")); "compileOnly"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT") }
+        dependencies { "compileOnly"(project(":varstore-api")); "compileOnly"(project(":varstore-paper")); "compileOnly"(project(":varstore-codec")); "compileOnly"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT") }
+        tasks.withType<ProcessResources>().configureEach { filesMatching("plugin.yml") { expand("version" to project.version) } }
+        tasks.withType<Jar>().configureEach { manifest.attributes["paperweight-mappings-namespace"] = "mojang" }
+    }
+}
+listOf(":varstore-cache", ":varstore-codec").forEach { name ->
+    project(name) { dependencies { "api"(project(":varstore-api")) } }
+}
+listOf(":varstore-placeholderapi", ":varstore-skript").forEach { name ->
+    project(name) {
+        dependencies {
+            "compileOnly"(project(":varstore-api"))
+            "compileOnly"(project(":varstore-paper"))
+            "compileOnly"(project(":varstore-cache"))
+            "compileOnly"("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+            if(name.endsWith("placeholderapi")) "compileOnly"("me.clip:placeholderapi:2.12.3")
+            else "compileOnly"("com.github.SkriptLang:Skript:2.16.1")
+        }
         tasks.withType<ProcessResources>().configureEach { filesMatching("plugin.yml") { expand("version" to project.version) } }
         tasks.withType<Jar>().configureEach { manifest.attributes["paperweight-mappings-namespace"] = "mojang" }
     }

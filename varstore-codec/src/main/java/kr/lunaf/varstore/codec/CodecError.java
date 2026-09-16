@@ -1,0 +1,6 @@
+package kr.lunaf.varstore.codec;
+
+public enum CodecError {
+    INVALID_ENVELOPE, CODEC_MISMATCH, UNSUPPORTED_VERSION, ENCODE_FAILED,
+    DECODE_FAILED, VALUE_TOO_LARGE, OVERLOADED, CLOSED
+}

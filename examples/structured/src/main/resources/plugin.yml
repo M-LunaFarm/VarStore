@@ -1,0 +1,9 @@
+name: VarStoreStructured
+version: '${version}'
+main: kr.lunaf.varstore.examples.structured.StructuredPlugin
+api-version: '1.21.11'
+depend: [VarStore]
+commands:
+  profilesettings:
+    description: Explicit versioned profile settings DTO
+    usage: /profilesettings get | /profilesettings save <language> <true|false> <persisted-operation-uuid>

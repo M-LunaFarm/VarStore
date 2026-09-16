@@ -1,0 +1,169 @@
+{
+  "recordedAt": "2026-09-15T12:53:42.140720+00:00",
+  "implementationCommit": "234e7f19ef710bfcc3c02630a307132e586bc15c",
+  "sourceTreeSha256": "2eafd4910faccd69659c481c3be3bf367a051a44f101821a1acd71f82506db92",
+  "version": "1.0.0",
+  "requiredContracts": {
+    "T01": {
+      "status": "PASS",
+      "evidence": [
+        "paper-smoke.json:checks.T01"
+      ]
+    },
+    "T02": {
+      "status": "PASS",
+      "evidence": [
+        "paper-smoke.json:checks.T02"
+      ]
+    },
+    "T03": {
+      "status": "PASS",
+      "evidence": [
+        "recovery.json:checks.T03"
+      ]
+    },
+    "T04": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:twoIndependentServersPreserveTwoThousandIncrements"
+      ]
+    },
+    "T05": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected"
+      ]
+    },
+    "T06": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected"
+      ]
+    },
+    "T07": {
+      "status": "PASS",
+      "evidence": [
+        "commit-response.json"
+      ]
+    },
+    "T08": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:casNoChangeAndDeleteRecreateProtectVersions"
+      ]
+    },
+    "T09": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:casNoChangeAndDeleteRecreateProtectVersions"
+      ]
+    },
+    "T10": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:failedTransactionRollsBackPlaceholdersAndDurablyReplaysFailure"
+      ]
+    },
+    "T11": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite",
+        "outage.json",
+        "paper-io-probe.json"
+      ]
+    },
+    "T12": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:overflowMissingAndMismatchedTypesNeverBecomeAbsence",
+        "contracts.json:valuesEnforceBytesAndUnambiguousUnicode"
+      ]
+    },
+    "T13": {
+      "status": "PASS",
+      "evidence": [
+        "paper-smoke.json:checks.T13"
+      ]
+    },
+    "T14": {
+      "status": "PASS",
+      "evidence": [
+        "paper-smoke.json:checks.T14"
+      ]
+    },
+    "T15": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:shutdownDistinguishesQueuedFromUnconfirmedWrite",
+        "contracts.json:boundedQueueRejectsWithoutBlockingAndCancellationCannotUndoWrite"
+      ]
+    },
+    "T16": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:resultRetentionNeverDeletesDedupMarker"
+      ]
+    },
+    "T17": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:concurrentMigrationIsSerializedAndSchemaTamperingRejected"
+      ]
+    },
+    "T18": {
+      "status": "PASS",
+      "evidence": [
+        "recovery.json:checks.T18"
+      ]
+    },
+    "T19": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:addressNamesAreCanonicalAndBounded",
+        "contracts.json:unicodeOwnersRemainDistinctThroughTransactionAndReplay"
+      ]
+    },
+    "T20": {
+      "status": "PASS",
+      "evidence": [
+        "contracts.json:planIsImmutableAndBoundsAllTargetsIncludingConditions",
+        "contracts.json:planRejectsTypeAmbiguityAndOversizedAggregate",
+        "contracts.json:byteAdmissionAndNamespaceAreCheckedBeforeStorage"
+      ]
+    },
+    "T21": {
+      "status": "PASS",
+      "evidence": [
+        "paper-smoke.json:checks.T21",
+        "contracts.json:auditIsAtomicAndDeduplicated"
+      ]
+    },
+    "T22": {
+      "status": "PASS",
+      "evidence": [
+        "outage.json",
+        "load-report.json",
+        "load-resources.csv"
+      ]
+    }
+  },
+  "additionalChecks": {
+    "realDeadlockRetry": "contracts.json:actualDeadlockRollsBackThenRetriesOriginalOperationExactlyOnce",
+    "runtimeDmlRole": "contracts.json:documentedRuntimeGrantsSupportStorageAndAuditButRejectDdlAndNetworkProvisioning",
+    "callbackIsolationAndBounds": "contracts.json:blockedCallbacksDoNotStarveOtherFuturesAndDeliveryCapacityStaysBounded",
+    "binaryIntegrity": "artifacts.json",
+    "twoLiveConsumers": "paper-smoke.json:checks.consumers",
+    "paperMainThreadCalls": 12000,
+    "mainThreadJdbcEventsObserved": 0
+  },
+  "performanceScope": {
+    "paperBaselineAggregateThresholdsMet": true,
+    "allPaperPhasesErrors": 0,
+    "standaloneStress": "Capacity measured with 549 errors under shared maximum-transaction contention and immediate recovery; see load-report.json. This is not a zero-error claim.",
+    "limitations": [
+      "Finite tests do not prove absence of all long-term leaks.",
+      "Shared test host differs from the proposed dedicated 4-vCPU, 8-GiB SSD reference.",
+      "Paper baseline writes include 1,200 APPLIED and 600 NO_CHANGE receipts; both commit operation records."
+    ]
+  }
+}

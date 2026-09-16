@@ -20,6 +20,11 @@ artifacts = [
     ('varstore-testkit', 'varstore-testkit', ''),
     ('examples/preferences', 'preferences', ''),
     ('examples/rewards', 'rewards', ''),
+    ('examples/quests', 'quests', ''),
+    ('examples/structured', 'structured', ''),
+    ('varstore-placeholderapi', 'varstore-placeholderapi', ''),
+    ('varstore-skript', 'varstore-skript', ''),
+    *[(module, module, suffix) for module in ('varstore-cache', 'varstore-codec') for suffix in ('', '-sources', '-javadoc')],
 ]
 names = []
 for module, base, suffix in artifacts:
@@ -38,7 +43,7 @@ with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
     for source in sorted((root / 'verification').rglob('*')):
         if source.is_file():
             bundle.write(source, str(source.relative_to(root)))
-    for module in ('preferences', 'rewards'):
+    for module in ('preferences', 'rewards', 'quests', 'structured'):
         for source in sorted((root / 'examples' / module / 'src').rglob('*')):
             if source.is_file():
                 bundle.write(source, str(source.relative_to(root)))

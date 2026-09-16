@@ -10,7 +10,7 @@ import asyncio
 import json
 import time
 
-state = {'armed': False, 'triggered': 0, 'dropped_bytes': 0, 'triggered_at': None}
+state = {'armed': False, 'triggered': 0, 'dropped_bytes': 0, 'triggered_at': None, 'mode': 'commit-response'}
 
 def observe_frontend(data, connection):
     # Decode actual PostgreSQL frames: READ COMMITTED is not a COMMIT command.
@@ -45,6 +45,9 @@ def observe_frontend(data, connection):
                 state['armed'] = False
                 state['triggered'] += 1
                 state['triggered_at'] = time.time()
+                if state['mode'] == 'before-commit':
+                    print('FAULT_TRIGGER BEFORE_COMMIT', flush=True)
+                    raise ConnectionError('Injected disconnect before COMMIT forwarding')
                 connection['drop'] = True
                 print('FAULT_TRIGGER COMMIT', flush=True)
             connection['write_seen'] = False
@@ -81,8 +84,9 @@ async def control(reader, writer):
         if len(pieces) < 2:
             return
         method, path = pieces[:2]
-        if method == 'POST' and path == '/arm':
+        if method == 'POST' and path in ('/arm', '/arm-before-commit'):
             state['armed'] = True
+            state['mode'] = 'before-commit' if path == '/arm-before-commit' else 'commit-response'
         elif method == 'POST' and path == '/clear':
             state['armed'] = False
         payload = json.dumps(state).encode()

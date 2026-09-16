@@ -3,6 +3,8 @@ package kr.lunaf.varstore.postgres;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import kr.lunaf.varstore.api.*;
+import kr.lunaf.varstore.api.events.*;
+import java.time.Duration;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,6 +16,7 @@ public final class PostgresBackend implements AutoCloseable {
     private static final String ADDRESS_COLUMNS="network_id,namespace,scope_kind,scope_id,owner_type,owner_id,variable_key";
     private static final String VALUE_COLUMNS="value_type,string_value,long_value,boolean_value,uuid_value,generation,revision,deleted";
     private final PostgresSettings settings;
+    private final OutboxRepository outbox;
     private final HikariDataSource pool;
     private final ThreadPoolExecutor borrowers;
     private static final int MAX_BORROWERS=64;
@@ -25,6 +28,7 @@ public final class PostgresBackend implements AutoCloseable {
         if(maxAttempts<1||maxAttempts>3)throw new IllegalArgumentException("Attempts must be 1..3");
         this.maxAttempts=maxAttempts;
         this.settings=Objects.requireNonNull(settings);
+        this.outbox=new OutboxRepository(settings.networkId(),settings.serverId(),this::prepare);
         HikariConfig config=new HikariConfig();
         // Paper may initialize DriverManager before loading this plugin. Resolve the shaded
         // driver through the plugin's classes instead of relying on global service discovery.
@@ -149,6 +153,7 @@ public final class PostgresBackend implements AutoCloseable {
                     Row old=before.get(mutation.target().address());Row changed=apply(c,mutation,old,deadline);
                     Outcome item=old==changed?Outcome.NO_CHANGE:Outcome.APPLIED;if(item==Outcome.APPLIED)outcome=Outcome.APPLIED;
                     results.put(mutation.target().address(),receipt(operationId,item,changed,mutation.kind()==Mutation.Kind.DELETE));
+                    if(item==Outcome.APPLIED)outbox.enqueue(c,mutation.target().address(),operationId,token(changed),mutation.kind()==Mutation.Kind.DELETE?ChangeKind.DELETE:ChangeKind.SET,deadline);
                 }
                 // Absence-only condition locks and missing DELETEs do not establish persistent key types.
                 for(var target:targets.values())if(before.get(target.address()).revision==0 && !results.containsKey(target.address()))deletePlaceholder(c,target.address(),deadline);
@@ -160,6 +165,54 @@ public final class PostgresBackend implements AutoCloseable {
             }
             if(plan.audit().isPresent())audit(c,plan.audit().get(),result,before,namespace,deadline);
             return result;
+        });
+    }
+    public KeyPage scanKeys(Address scopeAnchor,String prefix,Optional<String> cursor,int limit,long deadline) {
+        checkNetwork(scopeAnchor);return transaction(null,false,deadline,c->{lockEpoch(c,deadline,true);return KeyScanner.scan(c,this::prepare,scopeAnchor,prefix,cursor,limit,epoch,deadline);});
+    }
+    public SubscriptionState registerSubscription(SubscriptionSpec spec,long deadline) {
+        Objects.requireNonNull(spec);return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true,true);return outbox.register(c,spec,epoch,deadline);});
+    }
+    public SubscriptionState renewSubscription(SubscriptionState state,Duration lease,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.renew(c,state,lease,epoch,deadline);});
+    }
+    public List<Delivery> claimEvents(SubscriptionState state,int limit,Duration lease,long deadline) {
+        OutboxRepository.Claimed result=transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.claim(c,state,limit,lease,epoch,deadline);});
+        if(result.resync())throw new VarStoreException(ErrorCode.RESYNC_REQUIRED,"Subscription fell outside retained history; reset before reloading consumer state");return result.deliveries();
+    }
+    public boolean acknowledge(SubscriptionState state,long eventId,UUID leaseToken,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.acknowledge(c,state,eventId,leaseToken,epoch,deadline);});
+    }
+    public boolean failDelivery(SubscriptionState state,long eventId,UUID leaseToken,String errorCode,int maxAttempts,Duration retryDelay,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.fail(c,state,eventId,leaseToken,errorCode,maxAttempts,retryDelay,epoch,deadline);});
+    }
+    /** Discards this subscriber's backlog and establishes a fresh boundary BEFORE consumer state is loaded. */
+    public SubscriptionState resetSubscription(SubscriptionState state,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true,true);return outbox.reset(c,state,epoch,deadline);});
+    }
+    public void closeSubscription(SubscriptionState state,long deadline) {
+        transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);outbox.close(c,state,epoch,deadline);return null;});
+    }
+    public int retryDeadLetters(SubscriptionState state,int limit,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.retryDead(c,state,limit,epoch,deadline);});
+    }
+    public int pruneOutbox(Duration retention,int limit,long deadline) {
+        return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true,true);return outbox.prune(c,retention,limit,deadline);});
+    }
+    /** Estimates are database statistics, not exact scans. Unknown host/backup gauges are -1. */
+    public Map<String,Long> capacity(long deadline) {
+        return transaction(null,false,deadline,c->{lockEpoch(c,deadline,true);Map<String,Long> values=new LinkedHashMap<>();
+            try(var statement=prepare(c,"SELECT c.relname,GREATEST(c.reltuples,0)::bigint,pg_table_size(c.oid),pg_indexes_size(c.oid),COALESCE(s.n_tup_ins,0) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace LEFT JOIN pg_stat_user_tables s ON s.relid=c.oid WHERE n.nspname=current_schema() AND c.relname IN ('vs_operations','vs_operations_retention','vs_outbox','vs_outbox_delivery','vs_subscriptions')",deadline);var rows=statement.executeQuery()) {
+                while(rows.next()){String name=rows.getString(1);values.put(name+"EstimatedRows",rows.getLong(2));values.put(name+"TableBytes",rows.getLong(3));values.put(name+"IndexBytes",rows.getLong(4));if(name.equals("vs_operations"))values.put("operationsInsertedSinceStatsReset",rows.getLong(5));}
+            }
+            long total=values.getOrDefault("vs_operationsEstimatedRows",0L),full=values.getOrDefault("vs_operations_retentionEstimatedRows",0L);
+            values.put("operationsEstimatedRows",total);values.put("fullResultsEstimatedRows",full);values.put("markersOnlyEstimatedRows",Math.max(0,total-full));values.put("rowCountsAreEstimates",1L);values.put("tableEstimatesAreGlobal",1L);values.put("deliverySampleNetworkScoped",1L);
+            try(var statement=prepare(c,"SELECT GREATEST(0,EXTRACT(EPOCH FROM(clock_timestamp()-completed_at)))::bigint FROM vs_operations WHERE NOT result_expired AND completed_at IS NOT NULL ORDER BY completed_at LIMIT 1",deadline);var rows=statement.executeQuery()){values.put("oldestFullResultAgeSeconds",rows.next()?rows.getLong(1):0L);}
+            try(var statement=prepare(c,"SELECT GREATEST(0,EXTRACT(EPOCH FROM(clock_timestamp()-created_at)))::bigint FROM vs_outbox ORDER BY created_at,event_id LIMIT 1",deadline);var rows=statement.executeQuery()){values.put("oldestEventAgeSeconds",rows.next()?rows.getLong(1):0L);}
+            // A bounded sample gives operational visibility without counting a growing delivery table.
+            String deliverySample="WITH sample AS MATERIALIZED (SELECT state,attempts,event_id FROM vs_outbox_delivery WHERE network_id=? ORDER BY subscriber_id,event_id LIMIT 10001), bounded AS (SELECT * FROM sample LIMIT 10000) SELECT (SELECT count(*) FROM sample),count(*) FILTER(WHERE state='PENDING'),count(*) FILTER(WHERE state='LEASED'),count(*) FILTER(WHERE state='DEAD'),COALESCE(max(attempts),0),COALESCE(EXTRACT(EPOCH FROM(clock_timestamp()-min(e.created_at) FILTER(WHERE b.state<>'ACKED')))::bigint,0),COALESCE(sum(GREATEST(attempts-1,0)),0) FROM bounded b JOIN vs_outbox e ON e.event_id=b.event_id";
+            try(var statement=prepare(c,deliverySample,deadline)){statement.setString(1,settings.networkId());try(var rows=statement.executeQuery()){rows.next();values.put("deliverySampleLimit",10000L);values.put("deliverySampleRows",Math.min(10000,rows.getLong(1)));values.put("deliverySampleTruncated",rows.getLong(1)>10000?1L:0L);values.put("pendingDeliveriesInSample",rows.getLong(2));values.put("leasedDeliveriesInSample",rows.getLong(3));values.put("deadLettersInSample",rows.getLong(4));values.put("maximumAttemptsInSample",rows.getLong(5));values.put("oldestUnackedAgeSecondsInSample",Math.max(0,rows.getLong(6)));values.put("redeliveryAttemptsInSample",rows.getLong(7));}}
+            values.put("diskFreeBytes",-1L);values.put("lastBackupBytes",-1L);values.put("lastRestoreMillis",-1L);return Map.copyOf(values);
         });
     }
     public OperationStatus operation(String namespace,UUID operationId,long deadline) {
@@ -233,9 +286,10 @@ public final class PostgresBackend implements AutoCloseable {
             statement.setString(8,old.revision==0?null:token(old).toString());statement.setString(9,entry.getValue().version().map(Object::toString).orElse(null));statement.executeUpdate();
         }
     }
-    private UUID lockEpoch(Connection c,long deadline,boolean requireInitialized)throws SQLException{
+    private UUID lockEpoch(Connection c,long deadline,boolean requireInitialized)throws SQLException{return lockEpoch(c,deadline,requireInitialized,false);}
+    private UUID lockEpoch(Connection c,long deadline,boolean requireInitialized,boolean exclusive)throws SQLException{
         if(requireInitialized&&epoch==null)throw failure(ErrorCode.NOT_READY,"Backend is not initialized",null);
-        try(var statement=prepare(c,"SELECT storage_epoch,current_setting('fsync'),current_setting('full_page_writes'),current_setting('synchronous_commit'),pg_is_in_recovery() FROM vs_networks WHERE network_id=? FOR SHARE",deadline)){
+        try(var statement=prepare(c,"SELECT storage_epoch,current_setting('fsync'),current_setting('full_page_writes'),current_setting('synchronous_commit'),pg_is_in_recovery() FROM vs_networks WHERE network_id=? "+(exclusive?"FOR UPDATE":"FOR SHARE"),deadline)){
             statement.setString(1,settings.networkId());try(var rs=statement.executeQuery()){
                 if(!rs.next())throw failure(ErrorCode.NOT_READY,"Network is not provisioned",null);
                 if(settings.strictDurability() && (!rs.getString(2).equals("on") || !rs.getString(3).equals("on") || !Set.of("on","remote_apply").contains(rs.getString(4)) || rs.getBoolean(5)))throw failure(ErrorCode.DURABILITY_UNSAFE,"Primary database durability requirements not met",null);

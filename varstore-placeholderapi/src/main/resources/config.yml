@@ -1,0 +1,22 @@
+# VarStore's global display cache must also be enabled. No keys are exposed by default.
+max-entries: 1000
+max-bytes: 2097152
+max-age-seconds: 5
+refresh-ticks: 20
+states:
+  miss: 'Loading'
+  absent: 'Not set'
+  stale: 'Stale'
+  unavailable: 'Unavailable'
+# Grant each namespace to VarStorePlaceholders in VarStore shared-namespaces.
+# The consumer must register a nonsensitive DISPLAY_ONLY KeyDefinition first.
+# mappings:
+#   chat:
+#     namespace: varstorepreferences
+#     key: chat-visible
+#     scope: network
+#   kills:
+#     namespace: varstorequests
+#     key: quests/monster-kills
+#     scope: server:survival-1
+mappings: {}

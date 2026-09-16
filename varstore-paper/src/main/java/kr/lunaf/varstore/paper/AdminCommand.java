@@ -43,8 +43,8 @@ final class AdminCommand implements CommandExecutor, Listener {
         String action = args[0].toLowerCase(java.util.Locale.ROOT);
         String permission = switch (action) {
             case "status" -> "varstore.status";
-            case "diagnostics", "operation" -> "varstore.diagnostics";
-            case "inspect" -> "varstore.inspect";
+            case "diagnostics", "operation", "capacity", "pending", "events", "cache" -> "varstore.diagnostics";
+            case "inspect", "keys", "describe" -> "varstore.inspect";
             case "set", "delete", "confirm" -> "varstore.modify";
             default -> null;
         };
@@ -58,7 +58,40 @@ final class AdminCommand implements CommandExecutor, Listener {
         Reply reply = reply(sender);
         try {
             switch (action) {
-                case "status", "diagnostics" -> sender.sendMessage("VarStore state=" + store.state() + " schema=" + (store.state() == StoreState.READY ? "1(validated)" : "unverified") + " lastError=" + store.lastError() + " recentErrors60s=" + Math.max(0, store.metrics().storageErrors() - errorSamples[errorCursor]) + " metrics=" + store.metrics());
+                case "status", "diagnostics" -> sender.sendMessage("VarStore state=" + store.state() + " schema=" + (store.state() == StoreState.READY ? "2(validated)" : "unverified") + " lastError=" + store.lastError() + " recentErrors60s=" + Math.max(0, store.metrics().storageErrors() - errorSamples[errorCursor]) + " metrics=" + store.metrics());
+                case "keys" -> {
+                    if (args.length < 9 || args.length > 10 || !args[1].equals(plugin.getConfig().getString("network-id"))) throw new IllegalArgumentException();
+                    VarStore.Namespace namespace = store.namespace(args[2]);
+                    VarStore.Scope scope = args[3].equals("NETWORK") && args[4].equals("_") ? namespace.network()
+                            : args[3].equals("SERVER") ? namespace.server(args[4]) : null;
+                    if (scope == null) throw new IllegalArgumentException();
+                    complete(extensions().scanKeys(scope.owner(new Owner(args[5], args[6])), args[7].equals("_") ? "" : args[7],
+                            args.length == 10 ? Optional.of(args[9]) : Optional.empty(), Integer.parseInt(args[8])), reply,
+                            page -> "Metadata page=" + page.keys() + " next=" + page.nextCursor().orElse("END") + "; pages are separate snapshots");
+                }
+                case "describe" -> {
+                    if (args.length != 3) throw new IllegalArgumentException();
+                    Optional<KeyDefinition<?>> definition = extensions().definitions().find(args[1], args[2]);
+                    sender.sendMessage(definition.map(d -> "Local definition type=" + d.key().type() + " default=" + (d.sensitive() ? "<sensitive>" : d.defaultValue())
+                            + " description=" + d.description() + " sensitive=" + d.sensitive() + " cache=" + d.cachePolicy() + " schema=" + d.schemaVersion()).orElse("No local definition registered"));
+                }
+                case "capacity", "events" -> {
+                    if (args.length != 1) throw new IllegalArgumentException();
+                    complete(extensions().capacity(), reply, counts -> "DB capacity: row counts are estimates, relation bytes are measured, -1 means unavailable; " + counts);
+                }
+                case "pending" -> {
+                    if (args.length != 1) throw new IllegalArgumentException();
+                    sender.sendMessage("Locally tracked reconciliation only (absence never proves failure): " + extensions().pendingWrites().tracked());
+                }
+                case "cache" -> {
+                    kr.lunaf.varstore.cache.DisplayCache cache = plugin.getServer().getServicesManager().load(kr.lunaf.varstore.cache.DisplayCache.class);
+                    if (cache == null) { sender.sendMessage("Display cache disabled"); break; }
+                    if (args.length == 2 && args[1].equals("clear")) {
+                        if (!(sender instanceof ConsoleCommandSender)) { sender.sendMessage("Display cache clear is console-only."); break; }
+                        cache.invalidateAll(); sender.sendMessage("Display snapshots invalidated; primary data unchanged.");
+                    } else if (args.length != 1) throw new IllegalArgumentException();
+                    sender.sendMessage("Display cache " + cache.metrics());
+                }
                 case "operation" -> {
                     if (args.length != 3) throw new IllegalArgumentException();
                     complete(store.namespace(args[1]).operation(UUID.fromString(args[2])), reply,
@@ -78,6 +111,8 @@ final class AdminCommand implements CommandExecutor, Listener {
         } catch (RuntimeException error) { sender.sendMessage("Invalid command or address. Use /varstore for syntax."); }
         return true;
     }
+
+    private VarStoreExtensions extensions() { return (VarStoreExtensions) store; }
 
     private void addressCommand(String action, String[] args, Reply reply) {
         if ((action.equals("set") && args.length < 10) || (!action.equals("set") && args.length != 9))
@@ -147,6 +182,8 @@ final class AdminCommand implements CommandExecutor, Listener {
     private void usage(CommandSender sender) {
         sender.sendMessage("/varstore status|diagnostics; /varstore operation <namespace> <operation-id>");
         sender.sendMessage("/varstore inspect|set|delete <network> <namespace> <NETWORK|SERVER> <scope-id> <owner-type> <owner-id> <key> <STRING|LONG|BOOLEAN|UUID> [value]");
+        sender.sendMessage("/varstore keys <network> <namespace> <NETWORK|SERVER> <scope-id> <owner-type> <owner-id> <prefix|_> <limit> [cursor]");
+        sender.sendMessage("/varstore describe <namespace> <key>; capacity|pending|events|cache [clear]");
         sender.sendMessage("/varstore confirm <token> (console-only, valid 60 seconds)");
     }
     private record Reply(UUID player, UUID session, String actor) { }

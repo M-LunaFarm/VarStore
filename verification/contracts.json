@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "totalTests": 45,
+  "totalTests": 106,
   "suites": [
     {
       "suite": "kr.lunaf.varstore.api.ApiContractTest",
@@ -8,7 +8,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.345,
+      "seconds": 0.442,
       "cases": [
         "explicitOwnerIdsSupportUnicodeWithinEncodedByteLimit()",
         "planRejectsTypeAmbiguityAndOversizedAggregate()",
@@ -20,12 +20,111 @@
       ]
     },
     {
+      "suite": "kr.lunaf.varstore.cache.DisplayCacheTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.408,
+      "cases": [
+        "subscriptionActivationPrecedesLoadAndCloseReleasesListenersWithoutRepopulating()",
+        "invalidationDuringLoadDiscardsOldSnapshotAndReverseEventsNeverInstallValues()",
+        "coalescesLoadingAndCallerCancellationDoesNotCancelTheSharedRead()",
+        "dbFailureIsUnavailableWithoutDefaultAndNextLoadCanRecover()",
+        "crossNetworkDataCannotPopulateAHandleSubscribedToAnotherNetwork()",
+        "encodedStringReservationRespectsByteBudgetBeforeSubmittingRead()",
+        "epochChangePermanentlyClosesHandleAndStoreDisconnectInvalidatesOldLoads()",
+        "globalAndConsumerBudgetsIncludeInflightReadsAndCannotBeBypassedByAnotherHandle()",
+        "clearAllFencesEveryInflightLoadAndCachePermissionIsExplicit()",
+        "resyncBarrierClearsSnapshotAndBlocksPrimaryLoadsUntilResetCommits()",
+        "deleteAndRecreationInvalidateNegativeCacheAndGenerationIsNeverComparedNumerically()",
+        "maxAgeRunsFromReadStartAndAppliesIndependentlyToCoalescedCallers()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.codec.CodecAdapterTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.546,
+      "cases": [
+        "malformedPayloadIsDecodeErrorAndPrimaryFailuresNeverBecomeAbsent()",
+        "codecIdentityAndUnsupportedVersionsFailExplicitlyAndLegacySupportIsOptIn()",
+        "mutableInputIsSnapshottedBeforeAnyStorageSubmissionAndDecodedObjectsAreDetached()",
+        "equivalentObjectsProduceIdenticalWireSnapshotsRegardlessOfMapIterationOrder()",
+        "malformedEnvelopeDuplicateFieldsAndUnpairedUnicodeAreRejected()",
+        "closeRejectsNewWorkAndImmutableJsonContainersDoNotRetainMutableCollections()",
+        "roundTripsUnicodeEscapesAndEveryJsonDataKindWithoutObjectDeserialization()",
+        "nestingAndNodeCountsAreBoundedEvenForSmallBytePayloads()",
+        "decoderRunsOnBoundedWorkersAndRejectedCallsDoNotEnterAnUnboundedQueue()",
+        "entireUtf8EnvelopeIncludingMetadataIsLimitedToSixteenKiB()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.core.EventHubLifecycleTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.268,
+      "cases": [
+        "closeDuringExpiredResetCannotReactivateSubscription()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.core.ExtensionIntegrationTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 4.583,
+      "cases": [
+        "failedConsumerRetriesAndAcknowledgesOnlyAfterCompletion()",
+        "remoteCacheInvalidationExpiryResyncAndEpochFence()",
+        "committedFanoutAndLocalInvalidationsWorkAcrossTwoProviders()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.core.LocalKeyRegistryTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.255,
+      "cases": [
+        "boundedRegistryReturnsImmutableOrderedSnapshotsAndCloseClearsDefinitions()",
+        "sameNamespaceConflictIncludesMetadataAndDoesNotAffectOtherNamespaces()",
+        "identicalRegistrationsAreReferenceCountedAndDoubleCloseCannotReleaseAnotherConsumer()",
+        "concurrentConflictingDefinitionsNeverBothRegister()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.core.PendingWriteManagerTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.37,
+      "cases": [
+        "unknownThenNotObservedResendsExactlySamePlanAndOperationId()",
+        "expiredResultIsExplicitAndNeverReplayedWithANewOperationId()",
+        "deadlineDoesNotTurnNeverCompletedWriteIntoFailureOrAllowLateCompletionToChangeResult()",
+        "boundedUnresolvedPlansRejectDuplicateAndOverflowAndCloseCompletesAcceptedRequests()",
+        "notObservedAtAttemptLimitRequiresConfirmationAndLeavesForgettableReminder()",
+        "synchronousUnknownAndSynchronousQueryFailureUseSameBoundedRecoveryPath()",
+        "slowCompletionCallbackDoesNotDelayIndependentReconciliationOrItsDeadline()",
+        "confirmedQueryReturnsOriginalBusinessOutcomeWithoutAnotherWrite()",
+        "idReuseStopsImmediatelyAndPreservesIdForSynchronousValidationFailure()"
+      ]
+    },
+    {
       "suite": "kr.lunaf.varstore.core.PostgresContractTest",
       "tests": 12,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 18.93,
+      "seconds": 32.794,
       "cases": [
         "callbacksReleaseConnectionAndUseSeparateExecutor()",
         "completeReusableContracts()",
@@ -47,7 +146,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.103,
+      "seconds": 0.173,
       "cases": [
         "deleteRetainsExactPreviewVersionAndActor()",
         "invalidValueCannotReachConfirmation()",
@@ -60,10 +159,36 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.021,
+      "seconds": 0.035,
       "cases": [
         "expiryRejectsConfirmationAtDeadline()",
         "confirmationsBindActorAndPayloadAndAreConsumedOnce()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.paper.PaperSessionsTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.142,
+      "cases": [
+        "closeCancelsScheduledCompletionAndOwnedResources()",
+        "completionAfterReconnectCannotReachNewPlayerSession()",
+        "failureIsUnwrappedAndDeliveredOnlyOnMainThread()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.paper.TrackedWritesTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.106,
+      "cases": [
+        "freezeWaitsOnlyForSubmittedWorkAndRejectsNewWork()",
+        "completedFailureIsRetainedAndCannotBecomeSuccessfulDrain()",
+        "closeFailsOutstandingDrainWithoutCancellingDatabaseWork()"
       ]
     },
     {
@@ -72,9 +197,30 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 2.817,
+      "seconds": 2.664,
       "cases": [
         "actualDeadlockRollsBackThenRetriesOriginalOperationExactlyOnce()"
+      ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.postgres.ExtensionContractTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 8.583,
+      "cases": [
+        "migrationPreservesV1DataReceiptAndImmutableHistory()",
+        "registeringSubscriptionWaitsForExistingWriterBoundary()",
+        "sequenceMetadataIsValidatedButAdvancingSequenceValuesRemainValid()",
+        "durableOfflineDeliveryAndEphemeralCollectionAreExplicit()",
+        "rollbackRemovesVariableMutationAndOutboxTogether()",
+        "failedUpgradeRollsBackAndHistoryTamperingFailsClosed()",
+        "retentionPreservesDurableWindowThenMarksResyncBeforePruning()",
+        "leasesFenceOldAcksAndDeadLettersCanBeRetried()",
+        "scanUsesLiteralPrefixStableKeysetAndBoundCursor()",
+        "committedHigherIdNeverSkipsLaterCommittedLowerId()",
+        "actualChangesFanOutWithoutReplayNoChangeOrConditionFailureEvents()"
       ]
     },
     {
@@ -83,7 +229,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 19.814,
+      "seconds": 36.415,
       "cases": [
         "hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected()",
         "separateNetworkEpochFencesOldSessions()",
@@ -110,7 +256,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.008,
+      "seconds": 0.007,
       "cases": [
         "explicitSchemaAndCertificatePathsRemainAvailable()",
         "dangerousUrlOptionsCannotOverrideCredentialsTlsOrDeadlines()"
@@ -122,12 +268,27 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.335,
+      "seconds": 0.682,
       "cases": [
         "documentedRuntimeGrantsSupportStorageAndAuditButRejectDdlAndNetworkProvisioning()"
       ]
+    },
+    {
+      "suite": "kr.lunaf.varstore.tools.CsvDryRunTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.53,
+      "cases": [
+        "optionalExistingAddressProbeReportsTypeConflictsWithoutOverwriting()",
+        "detectsCollisionsAndRejectsAmbiguousOrInvalidTypesAndScopes()",
+        "dryRunLeavesInputUnchanged()",
+        "boundsBytesRowsUtf8AndCsvGrammar()",
+        "validatesPrimitivesEscapesAndCanonicalUuidWithoutExposingValues()"
+      ]
     }
   ],
-  "recordedAt": "2026-09-15T12:38:03.413772+00:00",
-  "sourceTreeSha256": "2eafd4910faccd69659c481c3be3bf367a051a44f101821a1acd71f82506db92"
+  "recordedAt": "2026-09-16T11:47:57.332109+00:00",
+  "sourceTreeSha256": "5de305255e289896bd5aa9638b2e1631871ca75b22c46ff7fc953e091e4c8d58"
 }

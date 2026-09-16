@@ -1,0 +1,9 @@
+name: VarStoreQuests
+version: '${version}'
+main: kr.lunaf.varstore.examples.quests.QuestsPlugin
+api-version: '1.21.11'
+depend: [VarStore]
+commands:
+  questprogress:
+    description: Network monster kill quest progress
+    usage: /questprogress [retry]
