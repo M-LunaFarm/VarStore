@@ -191,7 +191,8 @@ public final class PostgresBackend implements AutoCloseable {
         return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true,true);return outbox.reset(c,state,epoch,deadline);});
     }
     public void closeSubscription(SubscriptionState state,long deadline) {
-        transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);outbox.close(c,state,epoch,deadline);return null;});
+        // Deleting an ephemeral subscriber must not race a writer's fan-out SELECT/FK check.
+        transaction(null,true,deadline,c->{lockEpoch(c,deadline,true,true);outbox.close(c,state,epoch,deadline);return null;});
     }
     public int retryDeadLetters(SubscriptionState state,int limit,long deadline) {
         return transaction(null,true,deadline,c->{lockEpoch(c,deadline,true);return outbox.retryDead(c,state,limit,epoch,deadline);});

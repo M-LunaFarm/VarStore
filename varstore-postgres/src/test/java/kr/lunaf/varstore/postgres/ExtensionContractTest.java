@@ -117,6 +117,29 @@ class ExtensionContractTest {
   var reset=backend.resetSubscription(expired,deadline());assertFalse(reset.resyncRequired());set("fresh",4);assertEquals(1,claim(reset).size());
   sql("UPDATE vs_subscriptions SET lease_until=clock_timestamp()-interval '1 second' WHERE subscriber_id='cache'");subscribe("cleanup");assertEquals(2,count("vs_subscriptions"));
  }
+ @Test void closingEphemeralSubscriberCannotRaceInFlightFanoutForeignKey()throws Exception {
+  start();var subscription=backend.registerSubscription(spec("closing",SubscriptionMode.EPHEMERAL),deadline());
+  long barrier=UUID.randomUUID().getMostSignificantBits();
+  // Install a test-only BEFORE INSERT barrier after runtime schema validation.
+  sql("CREATE FUNCTION pause_fanout() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM pg_advisory_xact_lock("+barrier+"); RETURN NEW; END $$");
+  sql("CREATE TRIGGER pause_fanout BEFORE INSERT ON vs_outbox_delivery FOR EACH ROW EXECUTE FUNCTION pause_fanout()");
+  try(var blocker=connection();var monitor=connection();var workers=Executors.newFixedThreadPool(2)) {
+   try(var statement=blocker.prepareStatement("SELECT pg_advisory_lock(?)")){statement.setLong(1,barrier);statement.execute();}
+   try {
+    Future<WriteReceipt<Long>> writing=workers.submit(()->set("close-race",1));
+    assertTrue(awaitDatabaseWait(monitor,"advisory","INSERT INTO vs_outbox_delivery%"),"Writer must reach the fan-out barrier");
+    Future<?> closing=workers.submit(()->backend.closeSubscription(subscription,deadline()));
+    assertTrue(awaitDatabaseWait(monitor,"any","%FROM vs_networks%FOR UPDATE%"),"Close must wait at the network boundary while fan-out is in flight");assertFalse(closing.isDone());
+    try(var statement=blocker.prepareStatement("SELECT pg_advisory_unlock(?)")){statement.setLong(1,barrier);statement.execute();}
+    assertEquals(Outcome.APPLIED,writing.get(10,TimeUnit.SECONDS).outcome());closing.get(10,TimeUnit.SECONDS);
+   }finally{try(var statement=blocker.prepareStatement("SELECT pg_advisory_unlock(?)")){statement.setLong(1,barrier);statement.execute();}}
+  }
+  assertEquals(1L,backend.get(target("close-race"),deadline()).orElseThrow().value());assertEquals(1,count("vs_outbox"));assertEquals(0,count("vs_subscriptions"));assertEquals(0,count("vs_outbox_delivery"));
+ }
+ boolean awaitDatabaseWait(Connection monitor,String event,String query)throws Exception {
+  long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(1);
+  while(System.nanoTime()<end){try(var statement=monitor.prepareStatement("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='VarStore/origin' AND wait_event_type='Lock' AND (?='any' OR wait_event=?) AND query LIKE ?)")){statement.setString(1,event);statement.setString(2,event);statement.setString(3,query);try(var result=statement.executeQuery()){result.next();if(result.getBoolean(1))return true;}}Thread.sleep(10);}return false;
+ }
  @Test void retentionPreservesDurableWindowThenMarksResyncBeforePruning()throws Exception {
   start();var state=backend.registerSubscription(new SubscriptionSpec("long-retention","events",SubscriptionMode.DURABLE,Duration.ofMinutes(5),Duration.ofDays(3)),deadline());set("old",1);
   sql("UPDATE vs_outbox SET created_at=clock_timestamp()-interval '2 days'");assertEquals(0,backend.pruneOutbox(Duration.ofHours(1),100,deadline()));

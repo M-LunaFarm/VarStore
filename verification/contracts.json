@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "totalTests": 111,
+  "totalTests": 112,
   "suites": [
     {
       "suite": "kr.lunaf.varstore.api.ApiContractTest",
@@ -81,7 +81,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.284,
+      "seconds": 1.527,
       "cases": [
         "closeDuringExpiredResetCannotReactivateSubscription()"
       ]
@@ -92,7 +92,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 4.828,
+      "seconds": 4.824,
       "cases": [
         "failedConsumerRetriesAndAcknowledgesOnlyAfterCompletion()",
         "remoteCacheInvalidationExpiryResyncAndEpochFence()",
@@ -105,7 +105,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.186,
+      "seconds": 0.502,
       "cases": [
         "boundedRegistryReturnsImmutableOrderedSnapshotsAndCloseClearsDefinitions()",
         "sameNamespaceConflictIncludesMetadataAndDoesNotAffectOtherNamespaces()",
@@ -119,7 +119,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.256,
+      "seconds": 0.432,
       "cases": [
         "unknownThenNotObservedResendsExactlySamePlanAndOperationId()",
         "expiredResultIsExplicitAndNeverReplayedWithANewOperationId()",
@@ -138,7 +138,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 39.855,
+      "seconds": 33.227,
       "cases": [
         "callbacksReleaseConnectionAndUseSeparateExecutor()",
         "completeReusableContracts()",
@@ -160,7 +160,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.259,
+      "seconds": 0.162,
       "cases": [
         "deleteRetainsExactPreviewVersionAndActor()",
         "invalidValueCannotReachConfirmation()",
@@ -185,7 +185,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.073,
+      "seconds": 0.121,
       "cases": [
         "closeCancelsScheduledCompletionAndOwnedResources()",
         "completionAfterReconnectCannotReachNewPlayerSession()",
@@ -198,7 +198,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.04,
+      "seconds": 0.05,
       "cases": [
         "freezeWaitsOnlyForSubmittedWorkAndRejectsNewWork()",
         "completedFailureIsRetainedAndCannotBecomeSuccessfulDrain()",
@@ -211,23 +211,24 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 2.905,
+      "seconds": 3.053,
       "cases": [
         "actualDeadlockRollsBackThenRetriesOriginalOperationExactlyOnce()"
       ]
     },
     {
       "suite": "kr.lunaf.varstore.postgres.ExtensionContractTest",
-      "tests": 12,
+      "tests": 13,
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 11.285,
+      "seconds": 9.946,
       "cases": [
         "migrationPreservesV1DataReceiptAndImmutableHistory()",
         "registeringSubscriptionWaitsForExistingWriterBoundary()",
         "sequenceMetadataIsValidatedButAdvancingSequenceValuesRemainValid()",
         "durableOfflineDeliveryAndEphemeralCollectionAreExplicit()",
+        "closingEphemeralSubscriberCannotRaceInFlightFanoutForeignKey()",
         "restartingAtAttemptLimitCannotBypassDeadLetterCeiling()",
         "rollbackRemovesVariableMutationAndOutboxTogether()",
         "failedUpgradeRollsBackAndHistoryTamperingFailsClosed()",
@@ -244,7 +245,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 41.043,
+      "seconds": 35.254,
       "cases": [
         "hundredConcurrentDuplicatesMutateOnceAndConflictIsRejected()",
         "separateNetworkEpochFencesOldSessions()",
@@ -283,7 +284,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.98,
+      "seconds": 0.921,
       "cases": [
         "documentedRuntimeGrantsSupportStorageAndAuditButRejectDdlAndNetworkProvisioning()"
       ]
@@ -294,7 +295,7 @@
       "failures": 0,
       "errors": 0,
       "skipped": 0,
-      "seconds": 0.637,
+      "seconds": 0.81,
       "cases": [
         "optionalExistingAddressProbeReportsTypeConflictsWithoutOverwriting()",
         "detectsCollisionsAndRejectsAmbiguousOrInvalidTypesAndScopes()",
@@ -304,6 +305,6 @@
       ]
     }
   ],
-  "recordedAt": "2026-09-16T12:10:11.581347+00:00",
-  "sourceTreeSha256": "ca9ee16d5c161df7fbc53f37e21a24bc877a046157b2e4b0d51e6f3f30fb6cb8"
+  "recordedAt": "2026-09-16T12:24:22.847461+00:00",
+  "sourceTreeSha256": "787c6be6107c1d78f81eba1ba03c559d3cbf0e4f14644aa460931e40f98e8828"
 }

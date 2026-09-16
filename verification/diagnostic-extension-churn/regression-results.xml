@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kr.lunaf.varstore.postgres.ExtensionContractTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-16T12:21:59" hostname="vmi2726394" time="9.419">
+  <properties/>
+  <testcase name="migrationPreservesV1DataReceiptAndImmutableHistory()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="1.375"/>
+  <testcase name="registeringSubscriptionWaitsForExistingWriterBoundary()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.509"/>
+  <testcase name="sequenceMetadataIsValidatedButAdvancingSequenceValuesRemainValid()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.542"/>
+  <testcase name="durableOfflineDeliveryAndEphemeralCollectionAreExplicit()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="1.088"/>
+  <testcase name="closingEphemeralSubscriberCannotRaceInFlightFanoutForeignKey()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.744"/>
+  <testcase name="restartingAtAttemptLimitCannotBypassDeadLetterCeiling()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.971"/>
+  <testcase name="rollbackRemovesVariableMutationAndOutboxTogether()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.573"/>
+  <testcase name="failedUpgradeRollsBackAndHistoryTamperingFailsClosed()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.312"/>
+  <testcase name="retentionPreservesDurableWindowThenMarksResyncBeforePruning()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.518"/>
+  <testcase name="leasesFenceOldAcksAndDeadLettersCanBeRetried()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.907"/>
+  <testcase name="scanUsesLiteralPrefixStableKeysetAndBoundCursor()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.658"/>
+  <testcase name="committedHigherIdNeverSkipsLaterCommittedLowerId()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.461"/>
+  <testcase name="actualChangesFanOutWithoutReplayNoChangeOrConditionFailureEvents()" classname="kr.lunaf.varstore.postgres.ExtensionContractTest" time="0.724"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

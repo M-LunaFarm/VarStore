@@ -1,0 +1,19 @@
+{
+  "status": "CONFIRMED",
+  "sqlState": "23503",
+  "constraint": "vs_outbox_delivery_network_id_subscriber_id_fkey",
+  "trigger": "Concurrent ephemeral cache handle close and changed write fan-out",
+  "cause": "Both operations held shared network locks; the subscription disappeared after the INSERT SELECT snapshot but before delivery foreign-key validation.",
+  "effect": "Whole write transaction rolled back; no committed variable/event divergence.",
+  "fix": "Acquire the network row exclusively before close, consistently before the subscription row and delivery rows.",
+  "schemaChanged": false,
+  "verification": {
+    "status": "PASS",
+    "suite": "kr.lunaf.varstore.postgres.ExtensionContractTest",
+    "tests": 13,
+    "failures": 0,
+    "skipped": 0,
+    "regression": "closingEphemeralSubscriberCannotRaceInFlightFanoutForeignKey",
+    "mechanism": "BEFORE INSERT advisory-lock barrier holds the writer between fan-out selection and foreign-key validation; real close waits on the network row until commit."
+  }
+}
