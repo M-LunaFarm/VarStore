@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="kr.lunaf.varstore.core.ExtensionIntegrationTest" tests="3" skipped="0" failures="1" errors="0" timestamp="2026-09-16T12:25:57" hostname="runnervmlun5p" time="3.508">
+  <properties/>
+  <testcase name="failedConsumerRetriesAndAcknowledgesOnlyAfterCompletion()" classname="kr.lunaf.varstore.core.ExtensionIntegrationTest" time="1.743"/>
+  <testcase name="remoteCacheInvalidationExpiryResyncAndEpochFence()" classname="kr.lunaf.varstore.core.ExtensionIntegrationTest" time="0.455">
+    <failure message="java.util.NoSuchElementException: No value present" type="java.util.NoSuchElementException">java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at kr.lunaf.varstore.core.ExtensionIntegrationTest.remoteCacheInvalidationExpiryResyncAndEpochFence(ExtensionIntegrationTest.java:60)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+</failure>
+  </testcase>
+  <testcase name="committedFanoutAndLocalInvalidationsWorkAcrossTwoProviders()" classname="kr.lunaf.varstore.core.ExtensionIntegrationTest" time="1.303"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -56,15 +56,33 @@ class ExtensionIntegrationTest {
     }
     @Test void remoteCacheInvalidationExpiryResyncAndEpochFence()throws Exception{
         var first=open("cache");var writer=open("writer");var definition=new KeyDefinition<>(VarKey.longKey("display"),0L,"Display",false,CachePolicy.DISPLAY_ONLY,1);
+        // Establish the fixture before subscribing, so its SET notification cannot
+        // race the initial fill. Remote invalidation is exercised by the next write.
+        await(data(writer).set(definition.key(),1L));
         try(var cache=new DisplayCache(new CacheLimits(100,1_000_000));var handle=cache.open(first,"extension",new CacheLimits(50,500_000))){
-            await(handle.ready());await(data(writer).set(definition.key(),1L));assertEquals(1L,await(handle.getCached(data(first),definition,Duration.ofMinutes(5))).value().orElseThrow());
-            await(data(writer).set(definition.key(),2L));eventually(()->handle.peekCached(data(first),definition,Duration.ofMinutes(5)).state()!=CacheState.VALUE);
-            assertEquals(2L,await(handle.getCached(data(first),definition,Duration.ofMinutes(5))).value().orElseThrow());
+            await(handle.ready());assertCachedValue(handle,data(first),definition,1L);
+            await(data(writer).set(definition.key(),2L));eventually(()->handle.peekCached(data(first),definition,Duration.ofMinutes(5)).state()==CacheState.MISS);
+            assertCachedValue(handle,data(first),definition,2L);
             try(var c=connection();var s=c.prepareStatement("UPDATE vs_subscriptions SET lease_until=clock_timestamp()-interval '1 second' WHERE network_id=?")){s.setString(1,network);s.executeUpdate();}
             await(data(writer).set(definition.key(),3L));eventually(()->{var v=await(handle.getCached(data(first),definition,Duration.ofMinutes(5)));return v.state()==CacheState.VALUE&&v.value().orElseThrow()==3;});
             try(var c=connection()){SchemaMigrator.rotateEpoch(c,network);}
             try{await(data(first).get(definition.key()));}catch(RuntimeException expected){}
             eventually(()->handle.peekCached(data(first),definition,Duration.ofMinutes(5)).state()==CacheState.UNAVAILABLE);
         }
+    }
+    private void assertCachedValue(CacheHandle handle,VarStore.Data data,KeyDefinition<Long> definition,long expected)throws InterruptedException{
+        long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(8);
+        CachedValue<Long> result;
+        do {
+            result=await(handle.getCached(data,definition,Duration.ofMinutes(5)));
+            // A notification overlapping the read deliberately discards its result.
+            // Only that documented race is retried; absence/errors must fail this test.
+            if(result.state()!=CacheState.STALE) {
+                assertEquals(CacheState.VALUE,result.state(),"Unexpected cache result: "+result);
+                assertEquals(expected,result.value().orElseThrow());return;
+            }
+            Thread.sleep(20);
+        }while(System.nanoTime()<deadline);
+        fail("Cache never produced a fresh value after generation-fenced loading: "+result);
     }
 }

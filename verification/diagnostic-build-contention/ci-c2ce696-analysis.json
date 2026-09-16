@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-09-16T12:29:33.737624+00:00",
+  "run": "https://github.com/M-LunaFarm/VarStore/actions/runs/35095682241",
+  "commitPrefix": "c2ce696",
+  "artifactId": 10445858954,
+  "xml": "verification/diagnostic-build-contention/ci-c2ce696-extension-integration.xml",
+  "xmlSha256": "549e3971a9119d9b4315c5ed7cebb5f8338252e0c4836465de76737cb187b92f",
+  "observedFailure": "NoSuchElementException at ExtensionIntegrationTest.java:60 while dereferencing the first cached read value.",
+  "analysis": "The test seeded after subscribing and assumed getCached always returned VALUE. A write notification overlapping loading is documented to return STALE with no value; the unit race test exercises this path. The CI failure did not record CacheState, so this interleaving is a supported explanation rather than a captured event trace.",
+  "testOnlyChange": "Seed before subscription, verify remote write evicts to MISS, retry only STALE within eight seconds, assert VALUE before dereferencing; ABSENT, UNAVAILABLE and other states fail immediately with result details.",
+  "productionSourcesChanged": false,
+  "localVerification": {
+    "recordedAt": "2026-09-16T12:30:32.674539+00:00",
+    "command": "JAVA_HOME=JDK21 VARSTORE_TEST_JDBC_URL=jdbc:postgresql://127.0.0.1:25432/varstore_extensions ./gradlew build --console=plain",
+    "build": "PASS",
+    "elapsedSeconds": 42,
+    "tasksExecuted": 3,
+    "tasksUpToDate": 101,
+    "freshlyExecutedTestModule": "varstore-core",
+    "recordedContracts": {
+      "status": "PASS",
+      "totalTests": 112
+    },
+    "productionJarHashesUnchanged": true,
+    "checkedProductionJars": {
+      "varstore-codec/build/libs/varstore-codec-1.3.0.jar": "a80a06b3508c923c88902672f7d29b72e49e060ec90cfb582b95f1f6b5e4fbb8",
+      "varstore-testkit-paper/build/libs/varstore-testkit-paper-1.3.0.jar": "fbaf74a8b189ce028aaa809c985f636285cbd4234fc7eb83bf413a4d345aa4ae",
+      "varstore-placeholderapi/build/libs/varstore-placeholderapi-1.3.0.jar": "b6c023f291d031fce195d8159aacaa49746ba5699fef02c08dc37d9e0f4e32e3",
+      "varstore-paper/build/libs/varstore-paper-1.3.0.jar": "aacba3d0be7984fc12c1430315705af38586ade62508f51e1566a47bbb0cc9b4",
+      "varstore-testkit/build/libs/varstore-testkit-1.3.0.jar": "c04a32f8dc34fef9ac4c3d71504f1730af99c123ca3722eef681ef9aee6fe7ac",
+      "varstore-core/build/libs/varstore-core-1.3.0.jar": "8c1fb0ee654a2bfc90d8dfe398b2677f915a70cf1b0feaa2dc60f8b20a89b03f",
+      "varstore-skript/build/libs/varstore-skript-1.3.0.jar": "baeac9e9853819342b88cd572d1d8586baf81d51e0d3511622a3d594a26f43d9",
+      "varstore-api/build/libs/varstore-api-1.3.0.jar": "9879e2f056dab58c23475f5c27dc6498aa11015ad2ced4e5732f595381d868e7",
+      "examples/build/libs/examples-1.3.0.jar": "7ef66cebefc2f16f1a310fe144585f4b36c86a4a21151866cf4e14f03fdccc25",
+      "examples/rewards/build/libs/rewards-1.3.0.jar": "b9e57cbc89cf0d0676cc0e18a83f0e67508fa1603bedf0abfe212549c6bbba90",
+      "examples/preferences/build/libs/preferences-1.3.0.jar": "68986b63b9ac9c09c90aab20ba1bbace629aae396201808c2de530346d7fc972",
+      "examples/quests/build/libs/quests-1.3.0.jar": "be85dc9fc9477f576ee9020d327e1388b5e7f2e71933ff39d480d91f4764a66e",
+      "examples/structured/build/libs/structured-1.3.0.jar": "d8ac1f2d2202360f700d275c1e4c1c5dcc4a2ceb69c61e32c2015acdcac50ce5",
+      "varstore-postgres/build/libs/varstore-postgres-1.3.0.jar": "e207f7c84fab224975677939fb458d67c7b6f67cc780897f54aafc23e1b1c332",
+      "varstore-cache/build/libs/varstore-cache-1.3.0.jar": "dfcb50315bccd8beba1cf00d7c3aa035fe8353a5521cbf7efdd33b5efb588526",
+      "varstore-tools/build/libs/varstore-tools-1.3.0.jar": "81203efa649aae4b75923be6088bac75c118f494f710cb1d90b4215ae48bc709"
+    }
+  }
+}
