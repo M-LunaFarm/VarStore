@@ -13,3 +13,4 @@ __pycache__/
 *.[mM][aA][rR][kK][dD][oO][wW][nN]
 *.[mM][dD][oO][wW][nN]
 !/README.md
+!/docs/**/*.md

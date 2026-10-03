@@ -1,15 +1,20 @@
+# 같은 네트워크의 서버는 network-id를 같게, server-id는 서버마다 다르게 설정합니다.
 network-id: production
 server-id: survival-1
 storage:
+  # 현재 지원하는 저장소는 PostgreSQL이며 스키마 변경은 tools에서 수행합니다.
   driver: postgres
+  # 자격 증명 값이 아니라 Paper 프로세스에서 읽을 환경 변수 이름입니다.
   jdbc-url-env: VARSTORE_JDBC_URL
   username-env: VARSTORE_DB_USER
   password-env: VARSTORE_DB_PASSWORD
+  # 원격 DB는 verify-full. 개발용 비TLS DB에 연결할 때만 disable을 사용합니다.
   tls-mode: verify-full
   schema-mode: validate
   durability-check: strict
   maximum-pool-size: 4
 execution:
+  # 요청 개수와 바이트를 함께 제한합니다. 시간은 양의 정수 + ms/s/m입니다.
   db-workers: 4
   queue-max-requests: 256
   queue-max-bytes: 8388608
@@ -20,18 +25,21 @@ execution:
   shutdown-drain-timeout: 10s
   max-attempts: 3
 limits:
+  # 1.3.0의 고정 한도입니다. 값만 높이면 시작 시 검사가 거절합니다.
   max-value-bytes: 16384
   max-batch-read-keys: 64
   max-transaction-keys: 16
   max-transaction-bytes: 65536
 operations:
+  # 현재 릴리스의 고정 보존 정책입니다. 정리는 tools에서 제한된 배치로 실행합니다.
   full-result-retention: 7d
   dedup-marker-retention: forever
 cache:
+  # 표시용 캐시만 제공합니다. 결제/보상 조건은 Primary 저장 API로 확인합니다.
   enabled: false
   max-entries: 10000
   max-bytes: 16777216
-# Plugin name -> additional explicitly allowed namespaces; own lowercase name is allowed.
+# 플러그인 이름 -> 추가로 허용할 namespace. 자기 플러그인 이름의 소문자 영역은 기본 허용합니다.
 # shared-namespaces:
 #   MyPlugin: [shared]
 shared-namespaces: {}

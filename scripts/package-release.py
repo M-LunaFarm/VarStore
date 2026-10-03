@@ -40,6 +40,9 @@ with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as bundle:
         bundle.write(output / name, 'jars/' + name)
     for name in ('README.md', 'LICENSE'):
         bundle.write(root / name, name)
+    for source in sorted((root / 'docs').rglob('*.md')):
+        if source.is_file():
+            bundle.write(source, str(source.relative_to(root)))
     for source in sorted((root / 'verification').rglob('*')):
         if source.is_file():
             bundle.write(source, str(source.relative_to(root)))
