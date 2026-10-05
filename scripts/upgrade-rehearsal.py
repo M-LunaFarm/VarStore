@@ -3,6 +3,7 @@
 Runs no production discovery; requires VARSTORE_UPGRADE_TEST_DB and a V1 tools JAR.
 """
 import hashlib,json,os,pathlib,subprocess,time
+from release_support import VERSION
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 DB=os.environ['VARSTORE_UPGRADE_TEST_DB']
 if DB not in ('varstore_verify','varstore_upgrade'):raise SystemExit('Expected owned upgrade test database')
@@ -17,7 +18,7 @@ def fingerprint():
     out['v1History']=sql('SELECT row_to_json(t) FROM vs_schema_history t WHERE version=1')
     return out
 old=ROOT/'.local/release-1.0.0/varstore-tools-1.0.0.jar'
-new=ROOT/'varstore-tools/build/libs/varstore-tools-1.3.0.jar'
+new=ROOT/f'varstore-tools/build/libs/varstore-tools-{VERSION}.jar'
 assert old.is_file() and new.is_file()
 assert sql('SELECT max(version) FROM vs_schema_history')=='1','Fixture already upgraded; restore an owned backup first'
 backup=ROOT/'.local/upgrade-backups'/f'{DB}-rehearsal-v1.dump';backup.parent.mkdir(exist_ok=True)

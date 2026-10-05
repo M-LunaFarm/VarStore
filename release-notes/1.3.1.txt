@@ -1,0 +1,9 @@
+VarStore v1.3.1
+
+- Require varstore.inspect for /varstore operation because retained transaction receipts include stored values. Diagnostics-only users can still view status and metadata.
+- Update bundled PostgreSQL JDBC from 42.7.7 to 42.7.13 and the development bot UUID dependency to patched 11.1.1.
+- Commit the immutable sequential migration registry and migration compatibility tests. Existing V001/V002 SQL and schema version 2 remain compatible.
+- Simplify release version lookup and publish tested, checksummed distributions through GitHub Actions.
+
+Operators who need /varstore operation must grant varstore.inspect explicitly.
+Current patch test results and artifact provenance are in verification/v1.3.1 inside the distribution ZIP. Other verification files contain historical v1.0.0/v1.3.0 observations; live Paper smoke/load tests were not repeated for this patch.

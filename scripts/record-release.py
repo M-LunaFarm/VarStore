@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate release evidence and record current source/binary provenance."""
+"""Validate the original v1.3.0 extension evidence. Use prepare-release.py for patches."""
 import datetime
 import hashlib
 import json

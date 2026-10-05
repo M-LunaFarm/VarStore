@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "kr.lunaf.varstore"
-    version = "1.3.0"
+    version = "1.3.1"
     repositories {
         mavenCentral()
         maven("https://repo.papermc.io/repository/maven-public/")

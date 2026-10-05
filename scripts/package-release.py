@@ -3,14 +3,18 @@
 import hashlib
 import json
 import pathlib
-import re
 import shutil
 import zipfile
+from release_support import ROOT, VERSION
 
-root = pathlib.Path(__file__).resolve().parents[1]
-version = re.search(r'version = "([^"]+)"', (root / 'build.gradle.kts').read_text()).group(1)
+root = ROOT
+version = VERSION
 output = root / '.local' / ('release-' + version)
 output.mkdir(parents=True, exist_ok=True)
+# Refuse to include stale assets when packaging the same version again.
+for previous in output.iterdir():
+    if previous.is_file():
+        previous.unlink()
 artifacts = [
     ('varstore-paper', 'varstore-paper', ''),
     ('varstore-tools', 'varstore-tools', ''),

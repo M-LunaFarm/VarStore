@@ -1,0 +1,101 @@
+name: Release
+on:
+  push:
+    branches: [main]
+    paths:
+      - build.gradle.kts
+      - .github/workflows/release.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: varstore-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.prepare.outputs.version }}
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: varstore
+          POSTGRES_PASSWORD: varstore-test
+          POSTGRES_DB: varstore
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U varstore"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      VARSTORE_TEST_JDBC_URL: jdbc:postgresql://localhost:5432/varstore
+      VARSTORE_TEST_DB_USER: varstore
+      VARSTORE_TEST_DB_PASSWORD: varstore-test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts && npm audit --audit-level=low
+        working-directory: scripts/bots
+      - run: python3 scripts/check-public-tree.py
+      - run: ./gradlew clean build --console=plain
+      - id: prepare
+        run: python3 scripts/prepare-release.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-assets
+          path: ${{ steps.prepare.outputs.output }}/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-notes
+          path: ${{ steps.prepare.outputs.notes }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: release-verification
+          path: |
+            **/build/test-results/
+            verification/v*/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-assets
+          path: assets
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-notes
+          path: notes
+      - run: sha256sum --check SHA256SUMS
+        working-directory: assets
+      - name: Publish validated assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists; preserving its assets."
+            exit 0
+          fi
+          gh release create "v$VERSION" assets/* --target "$RELEASE_COMMIT" \
+            --title "VarStore v$VERSION" --notes-file "notes/$VERSION.txt" --latest

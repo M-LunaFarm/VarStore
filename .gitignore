@@ -9,6 +9,8 @@
 node_modules/
 __pycache__/
 *.pyc
+# Generated evidence for future versioned releases; existing tracked history stays intact.
+/verification/v*/
 *.[mM][dD]
 *.[mM][aA][rR][kK][dD][oO][wW][nN]
 *.[mM][dD][oO][wW][nN]

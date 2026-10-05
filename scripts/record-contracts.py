@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Record real JUnit results after a clean build with PostgreSQL enabled."""
 import datetime
+import argparse
 import hashlib
 import json
 import pathlib
 import xml.etree.ElementTree as ET
 
 root = pathlib.Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output', type=pathlib.Path, default=root / 'verification/contracts.json')
+args = parser.parse_args()
 suites = []
 for path in sorted(root.glob('*/build/test-results/test/TEST-*.xml')):
     suite = ET.parse(path).getroot()
@@ -23,7 +27,9 @@ required = {'kr.lunaf.varstore.api.ApiContractTest', 'kr.lunaf.varstore.core.Pos
             'kr.lunaf.varstore.core.PendingWriteManagerTest', 'kr.lunaf.varstore.postgres.ExtensionContractTest',
             'kr.lunaf.varstore.cache.DisplayCacheTest', 'kr.lunaf.varstore.codec.CodecAdapterTest',
             'kr.lunaf.varstore.tools.CsvDryRunTest', 'kr.lunaf.varstore.paper.PaperSessionsTest',
-            'kr.lunaf.varstore.paper.TrackedWritesTest'}
+            'kr.lunaf.varstore.paper.TrackedWritesTest',
+            'kr.lunaf.varstore.paper.AdminCommandPermissionTest',
+            'kr.lunaf.varstore.postgres.MigrationRegistryTest'}
 passed = required <= {suite['suite'] for suite in suites} and all(
     suite['tests'] > 0 and not any(suite[key] for key in ('failures', 'errors', 'skipped')) for suite in suites)
 digest = hashlib.sha256()
@@ -33,7 +39,7 @@ for path in sorted(root.glob('**/src/**/*')):
 report = {'status': 'PASS' if passed else 'FAIL', 'totalTests': sum(s['tests'] for s in suites),
           'suites': suites, 'recordedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'sourceTreeSha256': digest.hexdigest()}
-(root / 'verification').mkdir(exist_ok=True)
-(root / 'verification/contracts.json').write_text(json.dumps(report, indent=2) + '\n')
+args.output.parent.mkdir(parents=True, exist_ok=True)
+args.output.write_text(json.dumps(report, indent=2) + '\n')
 print(f"{report['status']}: {report['totalTests']} tests, {len(suites)} suites")
 raise SystemExit(0 if passed else 1)

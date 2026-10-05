@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+from release_support import VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
 JAVA = os.environ.get('VARSTORE_TEST_JAVA', '/usr/lib/jvm/java-21-openjdk-amd64/bin/java')
@@ -25,7 +26,7 @@ def main():
     env.setdefault('VARSTORE_TEST_DB_USER', 'varstore')
     env.setdefault('VARSTORE_TEST_DB_PASSWORD', 'varstore-test')
     old = ROOT / '.local/release-1.0.0/varstore-tools-1.0.0.jar'
-    harness = ROOT / 'varstore-testkit/build/libs/varstore-testkit-1.3.0.jar'
+    harness = ROOT / f'varstore-testkit/build/libs/varstore-testkit-{VERSION}.jar'
     runtime = (ROOT / 'varstore-testkit/build/runtime-classpath.txt').read_text().strip()
     current = str(harness) + os.pathsep + runtime
     artifacts = [old, harness] + [Path(p) for p in runtime.split(os.pathsep) if p.endswith('.jar') and '/varstore-' in p]
@@ -46,7 +47,7 @@ def main():
         upgraded = folder / 'extensions-write-v2.json'
         soak = folder / 'extensions-soak.json'
         run(str(harness) + os.pathsep + str(old), 'kr.lunaf.varstore.testkit.WriteCostHarness', ['original-1.0.0', str(baseline)], 120)
-        run(current, 'kr.lunaf.varstore.testkit.WriteCostHarness', ['extended-1.3.0', str(upgraded)], 120)
+        run(current, 'kr.lunaf.varstore.testkit.WriteCostHarness', [f'extended-{VERSION}', str(upgraded)], 120)
         print('WRITE_COMPARISON_FINISHED', flush=True)
         run(current, 'kr.lunaf.varstore.testkit.ExtensionLoadHarness', [str(args.seconds), str(soak)], args.seconds + 120)
     v1, v2, load = [json.loads(p.read_text()) for p in [baseline, upgraded, soak]]

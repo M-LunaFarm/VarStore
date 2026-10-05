@@ -1,6 +1,6 @@
 [versions]
 paper = "1.21.11-R0.1-SNAPSHOT"
-postgresql = "42.7.7"
+postgresql = "42.7.13"
 hikari = "6.2.1"
 junit = "5.11.4"
 placeholderapi = "2.12.3"

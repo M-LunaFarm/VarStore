@@ -8,10 +8,32 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.UUID;
+import java.util.List;
 
 /** Explicit maintenance-only schema management. Runtime connections only call validate. */
 public final class SchemaMigrator {
-    public static final int VERSION = 2;
+    // Catalog metadata is cumulative. V1 intentionally excludes sequences: its published
+    // catalog checksum predates sequence validation and must remain byte compatible.
+    record Migration(int version, String resource, List<String> tables, List<String> sequences) {
+        Migration { tables=List.copyOf(tables); sequences=List.copyOf(sequences); }
+    }
+    private static final List<Migration> MIGRATIONS = List.of(
+        new Migration(1, "/db/V001__initial.sql",
+            List.of("vs_networks", "vs_variables", "vs_operations", "vs_admin_audit", "vs_schema_history"), List.of()),
+        new Migration(2, "/db/V002__outbox.sql",
+            List.of("vs_networks", "vs_variables", "vs_operations", "vs_admin_audit", "vs_schema_history",
+                    "vs_outbox", "vs_outbox_delivery", "vs_subscriptions"),
+            List.of("vs_admin_audit_audit_id_seq", "vs_outbox_event_id_seq"))
+    );
+    public static final int VERSION = MIGRATIONS.getLast().version();
+    static {
+        for(int i=0;i<MIGRATIONS.size();i++)
+            if(MIGRATIONS.get(i).version()!=i+1)throw new ExceptionInInitializerError("Non-sequential migration registry");
+    }
+    static Migration migration(int version) {
+        if(version<1||version>MIGRATIONS.size())throw new IllegalArgumentException("Unsupported schema version: "+version);
+        return MIGRATIONS.get(version-1);
+    }
     private static final long LOCK_ID = 0x56415253544f5245L;
     private SchemaMigrator() {}
 
@@ -109,16 +131,17 @@ public final class SchemaMigrator {
             "SELECT 'column:'||c.relname||':'||a.attnum||':'||a.attname||':'||format_type(a.atttypid,a.atttypmod)||':'||a.attnotnull||':'||COALESCE(pg_get_expr(d.adbin,d.adrelid),'')||':'||a.attidentity::text||':'||a.attcollation::regcollation::text AS item FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_attribute a ON a.attrelid=c.oid LEFT JOIN pg_attrdef d ON d.adrelid=c.oid AND d.adnum=a.attnum WHERE n.nspname=current_schema() AND c.relname IN ("+tables(version)+") AND a.attnum>0 AND NOT a.attisdropped " +
             "UNION ALL SELECT 'constraint:'||c.relname||':'||t.conname||':'||pg_get_constraintdef(t.oid) FROM pg_constraint t JOIN pg_class c ON c.oid=t.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname LIKE 'vs_%' " +
             "UNION ALL SELECT 'index:'||indexname||':'||indexdef FROM pg_indexes WHERE schemaname=current_schema() AND tablename IN ("+tables(version)+") " +
-            (version>=2?"UNION ALL SELECT 'sequence:'||c.relname||':'||format_type(s.seqtypid,NULL)||':'||s.seqstart||':'||s.seqincrement||':'||s.seqmax||':'||s.seqmin||':'||s.seqcache||':'||s.seqcycle FROM pg_sequence s JOIN pg_class c ON c.oid=s.seqrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('vs_admin_audit_audit_id_seq','vs_outbox_event_id_seq') ":"") +
+            (!migration(version).sequences().isEmpty()?"UNION ALL SELECT 'sequence:'||c.relname||':'||format_type(s.seqtypid,NULL)||':'||s.seqstart||':'||s.seqincrement||':'||s.seqmax||':'||s.seqmin||':'||s.seqcache||':'||s.seqcycle FROM pg_sequence s JOIN pg_class c ON c.oid=s.seqrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ("+sqlNames(migration(version).sequences())+") ":"") +
             ") all_items ORDER BY item COLLATE \"C\"";
         StringBuilder values = new StringBuilder();
         try (var statement = connection.createStatement(); var result = statement.executeQuery(query)) { while(result.next()) values.append(result.getString(1)).append('\n'); }
         return sha256(values.toString());
     }
 
-    private static String tables(int version){return "'vs_networks','vs_variables','vs_operations','vs_admin_audit','vs_schema_history'"+(version>=2?",'vs_outbox','vs_outbox_delivery','vs_subscriptions'":"");}
+    private static String tables(int version){return sqlNames(migration(version).tables());}
+    private static String sqlNames(List<String> names){return names.stream().map(name->"'"+name+"'").collect(java.util.stream.Collectors.joining(","));}
     private static String script(int version) {
-        try (var stream = SchemaMigrator.class.getResourceAsStream(version==1?"/db/V001__initial.sql":"/db/V002__outbox.sql")) {
+        try (var stream = SchemaMigrator.class.getResourceAsStream(migration(version).resource())) {
             if (stream == null) throw new IllegalStateException("Migration resource missing");
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException error) { throw new IllegalStateException("Cannot read migration",error); }

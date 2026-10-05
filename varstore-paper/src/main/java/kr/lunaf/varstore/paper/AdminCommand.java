@@ -18,16 +18,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 
 final class AdminCommand implements CommandExecutor, Listener {
-    private final VarStorePlugin plugin;
+    private final Plugin plugin;
     private final VarStore store;
     private final ConfirmationTokens<Pending> confirmations = new ConfirmationTokens<>(Clock.systemUTC(), Duration.ofSeconds(60));
     private final Map<UUID, UUID> sessions = new HashMap<>();
     private final long[] errorSamples = new long[60];
     private int errorCursor;
 
-    AdminCommand(VarStorePlugin plugin, VarStore store) {
+    AdminCommand(Plugin plugin, VarStore store) {
         this.plugin = plugin;
         this.store = store;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -43,8 +44,8 @@ final class AdminCommand implements CommandExecutor, Listener {
         String action = args[0].toLowerCase(java.util.Locale.ROOT);
         String permission = switch (action) {
             case "status" -> "varstore.status";
-            case "diagnostics", "operation", "capacity", "pending", "events", "cache" -> "varstore.diagnostics";
-            case "inspect", "keys", "describe" -> "varstore.inspect";
+            case "diagnostics", "capacity", "pending", "events", "cache" -> "varstore.diagnostics";
+            case "inspect", "operation", "keys", "describe" -> "varstore.inspect";
             case "set", "delete", "confirm" -> "varstore.modify";
             default -> null;
         };

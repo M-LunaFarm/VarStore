@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Real PostgreSQL wire faults on owned loopback listeners, including atomic outbox."""
 import hashlib,json,os,pathlib,socket,subprocess,time,urllib.request
+from release_support import VERSION
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 JAVA='/usr/lib/jvm/java-21-openjdk-amd64/bin/java'
 ENV=dict(os.environ,VARSTORE_TEST_JDBC_URL='jdbc:postgresql://127.0.0.1:25432/varstore_extensions',VARSTORE_FAULT_JDBC_URL='jdbc:postgresql://127.0.0.1:25433/varstore_extensions',VARSTORE_TEST_DB_USER='varstore',VARSTORE_TEST_DB_PASSWORD='varstore-test')
 for port in (25433,25434):
  with socket.socket() as probe:probe.bind(('127.0.0.1',port))
 cp=(ROOT/'varstore-testkit/build/runtime-classpath.txt').read_text().strip()
-report={'status':'FAIL','checks':{},'artifactSha256':hashlib.sha256((ROOT/'varstore-testkit/build/libs/varstore-testkit-1.3.0.jar').read_bytes()).hexdigest()}
+report={'status':'FAIL','checks':{},'artifactSha256':hashlib.sha256((ROOT/f'varstore-testkit/build/libs/varstore-testkit-{VERSION}.jar').read_bytes()).hexdigest()}
 log=(ROOT/'.local/commit-fault-proxy.log').open('w')
 proxy=subprocess.Popen(['python3',str(ROOT/'scripts/fault-proxy.py'),'--upstream','25432'],stdout=log,stderr=subprocess.STDOUT)
 try:
